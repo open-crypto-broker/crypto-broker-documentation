@@ -1,0 +1,8 @@
+# Environment variables
+.env
+
+# Coverage directory
+coverage/
+
+# VScode
+.vscode/*
