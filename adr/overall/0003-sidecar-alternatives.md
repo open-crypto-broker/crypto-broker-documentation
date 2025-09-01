@@ -10,7 +10,7 @@ informed: Erwin Margewitsch
 
 ## Context and Problem Statement
 
-The goal of this ADR is to review the current proposed Main Application + Crypto Broker as sidecar architecture. Moreover, this document offers some insights on how it can be done and other alternatives that can be considered. Since the [CF-Deployment ADR](doc/adr/overall/0002-cf-deployment.md) already established the pattern for Cloud-Foundry, this ADR focuses on the deployment on Kubernetes only, both locally and Kyma.
+The goal of this ADR is to review the current proposed Main Application + Crypto Broker as sidecar architecture. Moreover, this document offers some insights on how it can be done and other alternatives that can be considered. Since the [CF-Deployment ADR](./0002-cf-deployment.md) already established the pattern for Cloud-Foundry, this ADR focuses on the deployment on Kubernetes only, both locally and Kyma.
 
 ## Decision Drivers
 
