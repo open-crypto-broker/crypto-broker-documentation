@@ -20,7 +20,7 @@ The server does not expose cryptographic functionality directly, instead it vali
 The server expects connections from clients using a compatible language-specific Crypto Broker library.
 All incoming requests are validated, logged, and processed in accordance with the security policies defined in the provided profiles.
 The Crypto Broker returns a response to the requested cryptographic operation or an error if the request could not be handled due to an internal failure.
-Verbose error handling is implemented, such that (in case of an erorr) the client is notified which part of the Crypto Broker operation failed.
+Verbose error handling is implemented, such that (in case of an error) the client is notified which part of the Crypto Broker operation failed.
 
 ---
 
@@ -232,7 +232,7 @@ The following types are structs with the listed attributes.
 
 This struct holds parameters provided by the application.
 
-| Field | Type | Decription |
+| Field | Type | Description |
 |------|------|-----------|
 | CACert | `*x509.Certificate` | Holds the CA certificate. |
 | PrivateKey | `any` | Holds the CA private key. Can be an ECDSA or RSA key, as per currently supported signing algorithms. |
@@ -243,7 +243,7 @@ This struct holds parameters provided by the application.
 
 This struct holds parameters provided by the profile.
 
-| Field | Type | Decription |
+| Field | Type | Description |
 |------|------|-----------|
 | SignatureAlgorithm | `x509.SignatureAlgorithm` | Holds the signature algorithm to be applied in the certificate signing operation. |
 | Validity | `SignProfileValidity` | Holds the certificate validity period given in the profile. |
@@ -253,33 +253,33 @@ This struct holds parameters provided by the profile.
 
 ### `SignProfileValidity`
 
-| Field | Type | Decription |
+| Field | Type | Description |
 |------|------|-----------|
 | NotBefore | [`time.Duration`](https://pkg.go.dev/time#Duration) | Holds the notBefore attribute of the X.509 certificate. |
 | NotAfter | [`time.Duration`](https://pkg.go.dev/time#Duration) | Holds the notAfter attribute of the X.509 certificate. |
 
 ### `SignProfileOptsKeyUsage`
 
-| Field | Type | Decription |
+| Field | Type | Description |
 |------|------|-----------|
 | Flags | `[]x509.KeyUsage` | Holds bitmap of the combined key usages. |
 
 ### `SignProfileBasicConstraints`
 
-| Field | Type | Decription |
+| Field | Type | Description |
 |------|------|-----------|
 | IsCA | `bool` | Holds configuration whether the generated certificate is a CA. |
 | PathLenConstraint | `int` | Holds the path length constraint of the generated certificate if it is a CA. |
 
 ### `SignProfileExtendedKeyUsage`
 
-| Field | Type | Decription |
+| Field | Type | Description |
 |------|------|-----------|
 | Usages | `[]x509.ExtKeyUsage` | Holds a set of extended key usages. |
 
 ### `BitSizeConstraints`
 
-| Field | Type | Decription |
+| Field | Type | Description |
 |------|------|-----------|
 | MinKeySize | `int` | Holds the minimum allowed key size. |
 | MaxKeySize | `int` | Holds the maximum allowed key size. |
@@ -456,7 +456,7 @@ This package defines the `Container` struct, which is used to instantiate the se
 It wires together different server dependencies like the logger, the cryptographic engine and the profiles.
 This is the internal entry point after the entry from the `main` package has been executed.
 From there, it receives the names of the available profiles and calls the `profile` package to load the profiles from the yaml file.
-It returns an instance of the API server together with the instantiated cryptographical library in `c10y`.
+It returns an instance of the API server together with the instantiated cryptographic library in `c10y`.
 
 ### Dependencies
 
@@ -581,7 +581,7 @@ Defines settings used during X.509 certificate signing.
 | Field                | Type                                           | Description                                   |
 |----------------------|------------------------------------------------|-----------------------------------------------|
 | `SignAlg`            | `c10y.Algorithm`                               | Algorithm for signing.                        |
-| `HashAlg`            | `c10y.Algorithm`                               | Algorihtm for hashing.                       |
+| `HashAlg`            | `c10y.Algorithm`                               | Algorithm for hashing.                       |
 | `SignatureAlgorithm` | `x509.SignatureAlgorithm`                      | X.509 signature algorithm including hashing and signing algorithm.                    |
 | `Validity`           | `ProfileAPISignCertificateValidity`            | Defines validity period offsets.              |
 | `KeyConstraints`     | `ProfileAPISignCertificateKeyConstraints`      | Key size constraints.                         |
@@ -634,7 +634,7 @@ Defines basic constraints for certificate signing.
 
 ### Raw Profile Values
 
-All of the above structs are also implemented for raw profile values parsed from the YAML encoded file, as specified in the [Profile Specification](https://github.tools.sap/apeirora-crypto-agility/crypto-broker-documentation/blob/main/spec/0002-profile-structure.md).
+All of the above structs are also implemented for raw profile values parsed from the YAML encoded file, as specified in the [Profile Specification](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0002-profile-structure.md).
 These raw profile structs consist of only Go native `string`, `bool` and `int` data types.
 The profile is firstly parsed via the raw profile structs and then mapped to the strongly-typed internal profile struct containing more sophisticated data types.
 
@@ -725,7 +725,7 @@ This package defines the gRPC interface exposed to the API and the request/respo
 It contains the gRPC service itself together with request/response messages and registration logic.
 The output of this package are marshaled/unmarshaled protobuf messages.
 
-A complete list of defined Protobuf messages as well as their structure and contents for different APIs can be found in the [Crypto Broker Library Specification](https://github.tools.sap/apeirora-crypto-agility/crypto-broker-documentation/blob/main/spec/0003-library.md).
+A complete list of defined Protobuf messages as well as their structure and contents for different APIs can be found in the [Crypto Broker Library Specification](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0003-library.md).
 
 ---
 
@@ -734,7 +734,7 @@ A complete list of defined Protobuf messages as well as their structure and cont
 1. Startup
 
     - Server loads profiles from `Profiles.yaml`
-    - Dependepncy injection container initializes logger and cryptographic engine
+    - Dependency injection container initializes logger and cryptographic engine
     - gRPC server is started, listening on a Unix socket on `/tmp/cryptobroker.sock`.
 
 1. Requests
@@ -771,4 +771,4 @@ From there, start the server via
 CRYPTO_BROKER_PROFILES_DIR=/full/path/to/profiles/ ./bin/cryptobroker-server
 ```
 
-For a detailed instruction on how to run the server and other ways to execute it, please refer to the [Crypto Broker Server README.md](https://github.tools.sap/apeirora-crypto-agility/crypto-broker-server).
+For a detailed instruction on how to run the server and other ways to execute it, please refer to the [Crypto Broker Server README.md](https://github.com/open-crypto-broker/crypto-broker-server).
