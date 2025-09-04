@@ -6,7 +6,7 @@ This specification enforces the following constraints for the generated certific
 
 ### Basic Constraints
 
-The generated certificate must have the attribute ```Basic Constraints``` set to the values provided in the profile. The broker must read this value from the profile and set it explicity in the generated certificate. Typical values include setting ```CA``` to ```FALSE```, indicating that the certificate must not be used to issue other certificates.
+The generated certificate must have the attribute ```Basic Constraints``` set to the values provided in the profile. The broker must read this value from the profile and set it explicitly in the generated certificate. Typical values include setting ```CA``` to ```FALSE```, indicating that the certificate must not be used to issue other certificates.
 
 * Attribute name: ```Basic Constraints```
 * Value type: ```Key-Value Pairs```

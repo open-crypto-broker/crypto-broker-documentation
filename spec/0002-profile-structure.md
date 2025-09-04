@@ -1,6 +1,6 @@
 # Profile Specification
 
-This document describes the structure and semantics of the `profile.yaml` file. The file contains one or multiple profiles, each of which can configure settings related to cryptographic operations supported by the Crypto Broker. Profiles can optionally define behavior for one or more APIs, such as data hashing, data signing, and certificate generation.
+This document describes the structure and semantics of the `Profiles.yaml` file. The file contains one or multiple profiles, each of which can configure settings related to cryptographic operations supported by the Crypto Broker. Profiles can optionally define behavior for one or more APIs, such as data hashing, data signing, and certificate generation.
 
 ---
 
