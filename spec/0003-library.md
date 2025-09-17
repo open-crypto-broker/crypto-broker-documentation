@@ -22,11 +22,12 @@ This specification describes the behavior and message formats of the API endpoin
 ## APIs
 
 When invoking any of the APIs, the application provides a Struct as a single parameter, which in turn contains the values listed below for the inputs of the respective API.
+If necessary, optional input parameters can be added to each of the API functions.
 The functions equally return a Struct containing API-specific values as well as additional metadata.
 
 ### `HashData`
 
-The `HashData` API function allows clients to compute cryptographic hashes over arbitraty data using an algorithm specified in a profile. Internally it accesses the `Hash` method on the `CryptoBroker` gRPC service.
+The `HashData` API function allows clients to compute cryptographic hashes over arbitrary data using an algorithm specified in a profile. Internally it accesses the `Hash` method on the `CryptoBroker` gRPC service.
 
 #### `HashData` Input
 
@@ -34,7 +35,7 @@ The `HashData` API function allows clients to compute cryptographic hashes over 
 |-------------|--------|-------------|
 | `profile`   | String | Name of the profile (e.g., `Default`, `PCI-DSS`). |
 | `input`     | Bytes  | Arbitrary input to be hashed. |
-| `metadata`     | Map  | *(Optional)* Metadata about the Crypto Broker request/response. |
+| `metadata`  | Map    | *(Optional)* Metadata about the Crypto Broker request/response. |
 
 > Note: The `outputSize` parameter for the SHAKE XOF is currently out of scope and not considered here. Whether this parameter is part of the API call or the profile configuration is for further study.
 
@@ -62,13 +63,21 @@ The `SignCertificate` API function allows clients to request a certificate by pr
 | `csr`       | String | PEM-encoded CSR containing the public key of the subject. |
 | `caPrivateKey`   | String | PEM-encoded private key of the issuer used to sign the CSR. |
 | `caCert`    | String | PEM-encoded certificate of the issuer containing the matching public key. |
-| `validNotBeforeOffset`    | String  | *(Optional)* Validity start request as an offset to the current time. |
+| `validNotBeforeOffset`   | String  | *(Optional)* Validity start request as an offset to the current time. |
 | `validNotAfterOffset`    | String  | *(Optional)* Validity end request as an offset to the current time. |
 | `subject`    | String  | *(Optional)* Custom Subject Distinguished Name provided by the application. |
 | `crlDistributionPoints`    | List of Strings  | *(Optional)* Custom CRL Distribution Point URLs provided by the application. |
 | `metadata`  | Map | *(Optional)* Metadata about the Crypto Broker request/response. |
 
 > Note: Time offset formats for `validNotBeforeOffset` and `validNotAfterOffset` (e.g., `-1h`, `8760h`) are expected to be strings compatible with Go duration parsing. Please refer to [time@go1.24.3 ParseDuration()](https://pkg.go.dev/time@go1.24.3#ParseDuration) for the syntax definition.
+
+#### `Options` Input
+
+Additional options which are not necessarily send to the Crypto Broker. For example local configuration options for the client can be specified.
+
+| Variable    | Type   | Description |
+|-------------|--------|-------------|
+| `encoding`  | String | *(Optional)* Define how the signed certificate shall be encoded. Default is PEM. Alternatives: Base64 |
 
 #### `SignCertificate` Output
 
