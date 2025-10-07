@@ -40,6 +40,14 @@ Problem question: What configuration sources and precedence should the server su
 * Build-time injection via `-ldflags` into exported variables (immutable-by-build)
 * Dynamic reload (e.g., SIGHUP)
 
+## Threat Model
+
+Currently, the Crypto Broker server reads the Profiles.yaml file at startup and parses every profile in this file.
+An application can then use one of these profiles to execute the APIs with different cryptographic algorithms.
+An attacker might want to change the algorithms for the API functions to algorithms which are known to be weak or already broken (e.g. MD5).
+For this downgrade attack vector it is crucial that an attacker cannot easily change the configuration on-the-fly or without notification.
+It is advisable to choose an option which allows to audit which persons made changes to the profiles.
+
 ## Decision Outcome
 
 TBD
