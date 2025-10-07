@@ -2,7 +2,7 @@
 status: "proposed"
 date: 2025-10-06
 decision-makers: Stephan Andre, Maximilian Lenkeit, Anselme Tueno
-consulted: 
+consulted:
 informed: Erwin Margewitsch
 ---
 
@@ -48,65 +48,65 @@ TBD
 
 ### Keep current: `CRYPTO_BROKER_PROFILES_DIR` only
 
-* Good, because
-  * Simple and already implemented, least code change.
-  * Security boundaries are clear (read-only directory, absolute path).
-* Neutral, because
-  * Works well with file mounts in containers.
-* Bad, because
-  * Inflexible in environments where direct file mounts are inconvenient.
-  * No inline/env or CLI options for quick testing.
+#### Good, because
+* Simple and already implemented, least code change.
+* Security boundaries are clear (read-only directory, absolute path).
+#### Neutral, because
+* Works well with file mounts in containers.
+#### Bad, because
+* Inflexible in environments where direct file mounts are inconvenient.
+* No inline/env or CLI options for quick testing.
 
 ### Env var pointing to a file: `CRYPTO_BROKER_PROFILES_FILE`
 
-* Good, because
-  * Directly supports K8s/CF mounts to a single file; easy to audit permissions.
-* Neutral, because
-  * Similar security model to directory but narrower scope.
-* Bad, because
-  * Still requires a file to exist; not ideal for pure-env deployments.
+#### Good, because
+* Directly supports K8s/CF mounts to a single file; easy to audit permissions.
+#### Neutral, because
+* Similar security model to directory but narrower scope.
+#### Bad, because
+* Still requires a file to exist; not ideal for pure-env deployments.
 
 ### Env var with inline YAML: `CRYPTO_BROKER_PROFILES_YAML`
 
-* Good, because
-  * No filesystem dependency; fits CF manifests and secrets-in-env patterns.
-* Neutral, because
-  * Convenient for small configs only.
-* Bad, because
-  * Risk of logs/inspection leaking configuration from environment.
-  * Harder to manage large multi-line YAML and rotation.
+#### Good, because
+* No filesystem dependency; fits CF manifests and secrets-in-env patterns.
+#### Neutral, because
+* Convenient for small configs only.
+#### Bad, because
+* Risk of logs/inspection leaking configuration from environment.
+* Harder to manage large multi-line YAML and rotation.
 
 ### Build-time injection via `-ldflags`
 
-* Good, because
-  * Immutable binaries with embedded defaults; reproducible behavior.
-* Bad, because
-  * Rebuild required for config changes; not flexible for ops.
+#### Good, because
+* Immutable binaries with embedded defaults; reproducible behavior.
+#### Bad, because
+* Rebuild required for config changes; not flexible for ops.
 
 ### Command-line flags
 
-* Good, because
-  * Local dev and debugging ergonomics; explicit over implicit.
-* Neutral, because
-  * Common practice for Go services.
-* Bad, because
-  * Another surface to document and test.
+#### Good, because
+* Local dev and debugging ergonomics; explicit over implicit.
+#### Neutral, because
+* Common practice for Go services.
+#### Bad, because
+* Another surface to document and test.
 
 ### Config file + XDG/OS default search
 
-* Good, because
-  * Sensible defaults for bare-metal environments.
-* Neutral, because
-  * Rarely used in containerized production.
-* Bad, because
-  * Might surprise users if undocumented; must be low precedence.
+#### Good, because
+* Sensible defaults for bare-metal environments.
+#### Neutral, because
+* Rarely used in containerized production.
+#### Bad, because
+* Might surprise users if undocumented; must be low precedence.
 
 ### Embedded defaults (`go:embed`) behind opt-in
 
-* Good, because
-  * Zero-setup for demos and quickstarts.
-* Bad, because
-  * Risky if accidentally enabled in prod; must require explicit flag or similar mechanism.
+#### Good, because
+* Zero-setup for demos and quickstarts.
+#### Bad, because
+* Risky if accidentally enabled in prod; must require explicit flag or similar mechanism.
 
 Please see [embed](https://pkg.go.dev/embed) for more info.
 
@@ -115,10 +115,9 @@ Please see [embed](https://pkg.go.dev/embed) for more info.
 SIGHUP is one of the POSIX signals (short for Signal Hang Up) sent to a process when its controlling terminal is closed or disconnected.
 Today, it’s commonly used to tell daemons or background services to reload their configuration files without restarting.
 
-* Good, because
-  * Enables seamless rotation without restarts.
-* Neutral, because
-  * Only for advanced operators.
-* Bad, because
-  * Complexity and potential for partial failure; requires rollback logic and strong validation.
-
+#### Good, because
+* Enables seamless rotation without restarts.
+#### Neutral, because
+* Only for advanced operators.
+#### Bad, because
+* Complexity and potential for partial failure; requires rollback logic and strong validation.
