@@ -2,7 +2,7 @@
 status: "proposed"
 date: 2025-10-06
 decision-makers: Stephan Andre, Maximilian Lenkeit, Anselme Tueno
-consulted:
+consulted: Pawel Chmielewski, Miyana Stange, Robin Winzler
 informed: Erwin Margewitsch
 ---
 
@@ -50,7 +50,11 @@ It is advisable to choose an option which allows to audit which persons made cha
 
 ## Decision Outcome
 
-TBD
+The current implementation is sufficient:
+The Crypto Broker server gets the path to the folder where the `Profiles.yaml` is stored via the environment variable `CRYPTO_BROKER_PROFILES_DIR`.
+At the moment there is no need to adjust the current behavior.
+In future it can be the case that the profiles shall be downloaded from an external source.
+Then this ADR will be updated.
 
 ## Pros and Cons of the Options
 
