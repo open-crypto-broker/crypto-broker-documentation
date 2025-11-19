@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 date: 2025-11-12
 decision-makers: Stephan Andre, Maximilian Lenkeit, Anselme Tueno
 consulted:  Robin Winzler, Miyana Stange, Pawel Chmielewski, Mirkanan Kazimzade
@@ -49,7 +49,7 @@ Chosen option: "Main Release Branch"
 
 ## Confirmation
 
-Confirmed by Stephan Andre and Maximilian Lenkeit on XX.11.2025.
+Confirmed by Stephan Andre on 12.11.2025.
 
 ## Pros and Cons
 
