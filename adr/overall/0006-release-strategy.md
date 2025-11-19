@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by 0008-release-strategy
 date: 2025-08-13
 decision-makers: Stephan Andre, Maximilian Lenkeit, Anselme Tueno
 consulted: Arturo Guridi, Pawel Chmielewski, Robin Winzler, Daniel Becker
@@ -61,7 +61,7 @@ As discussed in the round, all of the options can be implemented at any point in
 
 ## Confirmation
 
-Confirmed by Stephan Andre and Maximilian Lenkeit on 13.08.2025 .
+Confirmed by Stephan Andre and Maximilian Lenkeit on 13.08.2025.
 
 ## Pros and Cons
 
