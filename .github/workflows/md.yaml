@@ -1,18 +1,18 @@
 name: Markdownlint
 
 on:
+  pull_request:
   push:
     branches: [ main ]
-    paths:
-      - '**.md'
-      - '!bin/**/*.md'
-  pull_request:
 
 jobs:
   markdownlint-pipeline:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
-    - name: Run mdl
-      uses: actionshub/markdownlint@main
+      uses: actions/checkout@v5
+      with:
+          fetch-depth: 0 # important for git diff comparisons
+
+    - name: Run Markdownlint
+      uses: open-crypto-broker/.github/actions/markdownlint@main
