@@ -25,6 +25,26 @@ When invoking any of the APIs, the application provides a Struct as a single par
 If necessary, optional input parameters can be added to each of the API functions.
 The functions equally return a Struct containing API-specific values as well as additional metadata.
 
+### `Status`
+
+The `Status` API function helps determining a client the status of the Crypto Broker Server. gRPC itself has built-in support for [health checks](https://grpc.io/docs/guides/health-checking/).
+
+#### `StatusData` Input
+
+| Variable    | Type   | Description |
+|-------------|--------|-------------|
+| `service`   | String | Name of the service, if defined. Otherwise an empty string "" means the health of the complete Crypto Broker. |
+| `metadata`  | Map    | *(Optional)* Metadata about the Crypto Broker request/response. |
+
+#### `StatusData` Output
+
+The `Status` API returns a response body `StatusResponse` with following content:
+
+| Variable    | Type   | Description |
+|-------------|--------|-------------|
+| `status`    | String | Status of the Crypto Broker service or complete server. |
+| `metadata`  | Map    | Metadata about the Crypto Broker request/response. |
+
 ### `HashData`
 
 The `HashData` API function allows clients to compute cryptographic hashes over arbitrary data using an algorithm specified in a profile. Internally it accesses the `Hash` method on the `CryptoBroker` gRPC service.
