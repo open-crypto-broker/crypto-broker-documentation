@@ -25,24 +25,26 @@ When invoking any of the APIs, the application provides a Struct as a single par
 If necessary, optional input parameters can be added to each of the API functions.
 The functions equally return a Struct containing API-specific values as well as additional metadata.
 
-### `Status`
+### `HealthData`
 
-The `Status` API function helps determining a client the status of the Crypto Broker Server. gRPC itself has built-in support for [health checks](https://grpc.io/docs/guides/health-checking/).
+gRPC itself has built-in support for [health checks](https://grpc.io/docs/guides/health-checking/).
+The health service/messages are stored in a `third_party` folder.
+Go does not need to generate source code from this protobuf messages, as Go already provide pre-generated code in a module.
+All other languages need to include the `health.proto` file in the protobuf compiler include and input path in order to generate the necessary request and response messages.
 
-#### `StatusData` Input
+### `BenchmarkData`
+
+#### `BenchmarkData` Input
 
 | Variable | Type | Description |
 | --- | --- | --- |
-| `service` | String | Name of the service, if defined. Otherwise an empty string "" means the health of the complete Crypto Broker. |
 | `metadata` | Map | *(Optional)* Metadata about the Crypto Broker request/response. |
 
-#### `StatusData` Output
-
-The `Status` API returns a response body `StatusResponse` with following content:
+#### `BenchmarkData` Output
 
 | Variable | Type | Description |
 | --- | --- | --- |
-| `status` | String | Status of the Crypto Broker service or complete server. |
+| `benchmarkResults` | String | Result of the benchmark run. |
 | `metadata` | Map | Metadata about the Crypto Broker request/response. |
 
 ### `HashData`
