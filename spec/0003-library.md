@@ -44,7 +44,7 @@ All other languages need to include the `health.proto` file in the protobuf comp
 
 | Variable | Type | Description |
 | --- | --- | --- |
-| `benchmarkResults` | String | Result of the benchmark run. |
+| `benchmarkResults` | Array | Results of the benchmark run. |
 | `metadata` | Map | Metadata about the Crypto Broker request/response. |
 
 ### `HashData`
