@@ -34,6 +34,8 @@ All other languages need to include the `health.proto` file in the protobuf comp
 
 ### `BenchmarkData`
 
+This API allows clients to run a dedicated benchmark in the Crypto Broker server.
+
 #### `BenchmarkData` Input
 
 | Variable | Type | Description |
