@@ -85,4 +85,3 @@ Chosen option: [TBD]
     * visibility and discoverability are reduced to a minimum
 
 ## More Information
-
