@@ -125,13 +125,14 @@ The generated certificate must include a public key that meets the key length an
 
 ### CRL Distribution Points
 
-The generated certificate must include the attribute ```CRL Distribution Points```, which provides one or more URLs where the Certificate Revocation List (CRL) can be retrieved. The broker sets this value based on provided API parameters.
+The generated certificate should include the attribute ```CRL Distribution Points```, which provides one or more URLs where the Certificate Revocation List (CRL) can be retrieved. The broker sets this value based on provided API parameters, if available.
+Note: The Crypto Broker does not generate or host CRLs itself; it only includes the specified CRL distribution points in the certificate.
 
 * Attribute name: ```CRL Distribution Points```
 * Value type: ```List of URIs```
 * Source: Provided by API parameter
 * Rules:
-    * The broker must include all CRL URIs in the generated certificate.
+    * The broker include all CRL URIs in the generated certificate.
 * Examples:
     * ```CRL Distribution Points: https://certificate-service-crls.cf.sap.hana.ondemand.com/1745567416_1751014216.crl```
 
