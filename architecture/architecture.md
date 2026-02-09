@@ -6,10 +6,6 @@
 2. [System Architecture](#system-architecture)
 3. [Component Description](#component-description)
 4. [Communication Architecture](#communication-architecture)
-5. [Performance Evaluation](#performance-evaluation)
-6. [FIPS 140-3 Mode](#fips-140-3-mode)
-7. [Deployment Architecture](#deployment-architecture)
-8. [Resilience and Fault Tolerance](#resilience-and-fault-tolerance)
 
 ---
 
