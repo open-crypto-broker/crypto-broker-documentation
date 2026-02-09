@@ -68,13 +68,15 @@ C4Container
 
 ### Request Flow
 
-The Request Flow sequence diagram illustrates both the deployment model and the complete lifecycle of a cryptographic operation request. The diagram shows two separate containers/processes (Client-Container and Server-Container) representing the sidecar deployment pattern. 
+The Request Flow sequence diagram illustrates both the deployment model and the complete lifecycle of a cryptographic operation request. The diagram shows two separate containers/processes (Client-Container and Server-Container) representing the sidecar deployment pattern.
 
 **Communication within containers** (inside the colored boxes) occurs through direct function calls:
+
 - Application → Crypto Broker client: In-process API call
 - Crypto Broker server → Crypto Provider: In-process crypto function invocation
 
 **Communication between containers** (crossing box boundaries) uses Inter-Process Communication (IPC) via gRPC over Unix domain sockets:
+
 - Crypto Broker client → Crypto Broker server: gRPC request serialization and Unix socket transmission
 - Crypto Broker server → Crypto Broker client: gRPC response serialization and Unix socket transmission
 
@@ -123,19 +125,18 @@ graph TD
         C --> E
         D --> E
     end
-    style ca fill:#ffffff,stroke:#000000
     
     subgraph client [Client application]
         A[Create and send CSR]
         B[Get Certificate]
     end
-    style client fill:#ffffff,stroke:#000000
     
     A == HTTP/HTTPS ==> E
     E == HTTP/HTTPS ==> B
 ```
 
 **Limitations of Traditional Approach**:
+
 - Cryptographic logic embedded in application code
 - Algorithm changes require code modifications and redeployment
 - Difficult to enforce consistent crypto policy across multiple services
@@ -165,7 +166,6 @@ graph TD
         G --> H
         P -.Policy.-> G
     end
-    style broker fill:#90EE90,stroke:#000000
     
     subgraph ca [Certificate Service Local-CA]
         C[Provide CA key<br/>and Certificate]
@@ -174,16 +174,13 @@ graph TD
             D[Create Request]
             E[Process Response]
         end
-        style brokerlib fill:#ADD8E6,stroke:#000000
         C --> D
     end
-    style ca fill:#ffffff,stroke:#000000
     
     subgraph client [Client application]
         A[Create and send CSR]
         B[Get Certificate]
     end
-    style client fill:#ffffff,stroke:#000000
     
     A == HTTP/HTTPS ==> D
     E == HTTP/HTTPS ==> B
@@ -197,7 +194,7 @@ graph TD
    - Switch from ECDSA P-256 to P-384 without redeploying the certificate service
    - Update certificate extension policies centrally
 
-2. **Separation of Concerns**: 
+2. **Separation of Concerns**:
    - Certificate service focuses on business logic (CSR validation, lifecycle management)
    - Crypto Broker handles cryptographic operations and policy enforcement
 
@@ -235,6 +232,7 @@ The Crypto Broker Server is the core component that:
 - Supports multiple cryptographic profiles for different compliance requirements
 
 **Key Capabilities** (current, with ongoing expansion):
+
 - **Hash Operations**: SHA-2, SHA-3 family algorithms (additional algorithms planned)
 - **Certificate Signing**: Generate X.509 certificates from CSRs
 - **Health Checks**: gRPC health check protocol support
@@ -243,6 +241,7 @@ The Crypto Broker Server is the core component that:
 - **Future Operations**: Encryption/decryption, key derivation, MAC operations, and more in development
 
 **Configuration**:
+
 - Profile-based cryptographic policy configuration (YAML)
 - Environment variable configuration for logging, paths, and telemetry
 - FIPS 140-3 mode enabled at build-time
@@ -260,11 +259,13 @@ The Crypto Broker Clients are librariies that provide a simple, consistent API a
 - Support retry policies and error handling
 
 **Available Implementations**:
+
 - **Go Client**: Native Go library for Go applications
 - **JavaScript/Node.js Client**: TypeScript-based library for Node.js applications
 - **Future**: Additional language support planned
 
 **API Operations** (currently available, expanding):
+
 - `HealthCheck()`: Server health status
 - `HashData()`: Compute cryptographic hashes
 - `SignCertificate()`: Generate signed X.509 certificates
@@ -283,6 +284,7 @@ Command-line interface applications that:
 - Used in end-to-end testing pipelines
 
 **Use Cases**:
+
 - Development and testing
 - Known-Answer-Tests (KAT) validation
 - Performance benchmarking
@@ -300,6 +302,7 @@ Provides deployment configurations and end-to-end tests for:
 - **E2E Testing**: Comprehensive test suite validating all components
 
 **Testing Capabilities** (current suite, continuously expanding):
+
 - Health check tests
 - Hashing and signing operation tests
 - Benchmark tests
@@ -341,6 +344,7 @@ Included as a Git submodule in both server and client repositories to ensure con
 The Crypto Broker uses gRPC as the communication protocol between client and server. This decision (documented in ADR-0004) was made based on:
 
 **Advantages of gRPC**:
+
 - **Compact Binary Format**: Protobuf is more efficient than JSON, especially for binary data (certificates, keys)
 - **Type Safety**: Strong typing and schema validation
 - **Streaming Support**: Built-in support for bidirectional streaming (future use cases)
@@ -353,6 +357,7 @@ The Crypto Broker uses gRPC as the communication protocol between client and ser
 The protocol selection was evaluated through comprehensive benchmarking as documented in ADR-0004. The evaluation compared gRPC and HTTP across 1000 samples per combination, testing hash and sign operations with both native Go crypto and OpenSSL in Docker and local environments.
 
 **Key Findings from ADR-0004**:
+
 - **Payload Efficiency**: Protobuf binary encoding reduces payload size by 30-40% compared to JSON, especially significant for certificate operations containing binary data (CSR, private keys, CA certificates)
 - **Latency**: For small payloads (hash operations), protocol latency difference is marginal; for larger operations (certificate signing), gRPC shows measurable performance improvement
 - **Concurrency**: gRPC performs significantly better with concurrent requests due to HTTP/2 multiplexing capabilities
@@ -366,15 +371,14 @@ The protocol selection was evaluated through comprehensive benchmarking as docum
 Communication occurs over Unix domain sockets at `/tmp/cryptobroker.sock`:
 
 **Benefits**:
+
 - **Performance**: No network stack overhead
 - **Security**: File system permissions control access
 - **Simplicity**: No port management or network configuration
 - **Local-only**: Prevents remote attacks by design
 
 **Deployment Model**:
+
 - Server and client run in separate containers/processes on the same host
 - Shared volume mount for the socket file
 - Client connects via the socket path, establishes gRPC connection
-
----
-
