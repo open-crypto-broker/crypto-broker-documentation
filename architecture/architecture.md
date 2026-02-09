@@ -11,7 +11,11 @@
 
 ## Overview
 
-The Crypto Broker is a cryptographic service that provides crypto agility by offloading cryptographic operations from applications. It can be deployed in any environment—cloud, on-premises, or local—as long as the core deployment requirements are met: the server and client must run on the same host but in separate processes, communicating via Unix domain sockets. It follows a sidecar pattern where applications delegate cryptographic operations to a dedicated server component, enabling centralized crypto policy management, easy algorithm updates, and compliance with regulatory requirements such as FIPS 140-3.
+The Crypto Broker is a cryptographic service that provides crypto agility by offloading cryptographic operations from applications.
+It can be deployed in any environment—cloud, on-premises, or local—as long as the core deployment requirements are met: the server
+and client must run on the same host but in separate processes, communicating via Unix domain sockets. It follows a sidecar pattern
+where applications delegate cryptographic operations to a dedicated server component, enabling centralized crypto policy management,
+easy algorithm updates, and compliance with regulatory requirements such as FIPS 140-3.
 
 ### Key Features
 
