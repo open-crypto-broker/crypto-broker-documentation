@@ -1,6 +1,6 @@
 ---
-status: "proposed"
-date: 2025-12-10
+status: "accepted"
+date: 2026-02-10
 decision-makers: Stephan Andre, Maximilian Lenkeit, Anselme Tueno
 consulted: Miyana Stange, Robin Winzler, Pawel Chmielewski, Mirkanan Kazimzade
 informed: Erwin Margewitsch
@@ -24,14 +24,17 @@ The aim of this ADR is to discuss how we want to publish the ts client library, 
 
 ## Considered Options
 
-* Publish on the public npm registry (npmjs.org)
-* Publish on GitHub Packages (GitHub's npm registry)
-* Publish on both
-* Do not publish to a registry
+1. Publish on the public npm registry (npmjs.org)
+2. Publish on GitHub Packages (GitHub's npm registry)
+3. Publish on both
+4. Do not publish to a registry
 
 ## Decision Outcome
 
-Chosen option: [TBD]
+Chosen option: 2 (Publish on GitHub Packages)
+
+There is currently no requirement from stakeholders to publish the npm package to npmjs.org.
+To keep maintenance and management efforts a minimum, option 2 is preferred and will be implemented.
 
 ### Consequences
 
@@ -40,7 +43,7 @@ Chosen option: [TBD]
 
 ### Confirmation
 
-{Describe how the implementation / compliance of the ADR can/will be confirmed. Is there any automated or manual fitness function? If so, list it and explain how it is applied. Is the chosen design and its implementation in line with the decision? E.g., a design/code review or a test with a library such as ArchUnit can help validate this. Note that although we classify this element as optional, it is included in many ADRs.}
+Confirmed by Anselme Tueno and Stephan Andre on 10.02.2026.
 
 ## Pros and Cons of the Options
 
@@ -85,3 +88,6 @@ Chosen option: [TBD]
     * visibility and discoverability are reduced to a minimum
 
 ## More Information
+
+Update: Downtimes are a standard risk and not further a decision driver.
+
