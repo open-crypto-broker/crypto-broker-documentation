@@ -90,4 +90,3 @@ Confirmed by Anselme Tueno and Stephan Andre on 10.02.2026.
 ## More Information
 
 Update: Downtimes are a standard risk and not further a decision driver.
-
