@@ -38,8 +38,8 @@ To keep maintenance and management efforts a minimum, option 2 is preferred and 
 
 ### Consequences
 
-* Good, because [TBD]
-* Bad, because [TBD]
+* Good, because using one ecosystem, management and maintenance are kept a minimum
+* Bad, because visibility and discoverability are mainly tied to github
 
 ### Confirmation
 
