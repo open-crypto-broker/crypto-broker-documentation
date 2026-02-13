@@ -651,13 +651,13 @@ The following KPIs are tracked to ensure the Crypto Broker meets performance and
 
 Latency metrics measure the time delay for cryptographic operations, critical for applications requiring real-time or near-real-time responses. Lower latency improves user experience and enables higher throughput in request-heavy scenarios.
 
-| Metric | Description | Target | Current Performance | Notes |
-|--------|-------------|--------|---------------------|-------|
-| Hash Operation Latency | Time to compute a hash of arbitrary data using SHA-2/SHA-3 algorithms. | < 125μs | 87μs (sync), 39μs (parallel) | Below target in both modes |
-| Sign Operation Latency | Time to generate an X.509 certificate from a CSR. | < 1.4ms | 975μs (sync), 160μs (parallel) | Well below target |
-| Health Check Latency | Time to query server health status. | < 125μs | 81μs (sync), 37μs (parallel) | Minimal overhead |
-| Parallel Performance Gain | Performance improvement when executing operations concurrently. | > 2x | 2.2x (hash), 2.2x (health), 6.1x (sign) | Excellent concurrent scaling |
-| Memory per Operation | RAM allocated per cryptographic operation. | < 35KB | 9KB (hash), 8KB (health), 20KB (sign) | Lightweight memory footprint |
+| Metric                    | Description                                                              | Target  | Current Performance                 | Notes                        |
+|---------------------------|--------------------------------------------------------------------------|---------|-------------------------------------|------------------------------|
+| Hash Operation Latency    | Time to compute a hash of arbitrary data using SHA-2/SHA-3 algorithms.   | < 125μs | 87μs (sync), 39μs (parallel)        | Below target in both modes   |
+| Sign Operation Latency    | Time to generate an X.509 certificate from a CSR.                        | < 1.4ms | 975μs (sync), 160μs (parallel)      | Well below target            |
+| Health Check Latency      | Time to query server health status.                                      | < 125μs | 81μs (sync), 37μs (parallel)        | Minimal overhead             |
+| Parallel Performance Gain | Performance improvement when executing operations concurrently.          | > 2x    | 2.2x (hash), 2.2x (health), 6.1x    | Excellent concurrent scaling |
+| Memory per Operation      | RAM allocated per cryptographic operation.                               | < 35KB  | 9KB (hash), 8KB (health), 20KB      | Lightweight memory footprint |
 
 #### Throughput Metrics
 
@@ -668,7 +668,7 @@ Throughput metrics measure the volume of cryptographic operations the server can
 | Hash Operations/sec         | Number of hash computations completed per second under sustained load.   | > 8,000 | 11,400 (sync), 25,400 (parallel) | Exceeds target significantly                  |
 | Sign Operations/sec         | Number of certificate signing operations completed per second.           | > 750   | 1,025 (sync), 6,265 (parallel)   | Exceeds target significantly                  |
 | Health Check Operations/sec | Number of health checks completed per second.                            | > 8,000 | 12,300 (sync), 27,000 (parallel) | Excellent monitoring capacity                 |
-| Parallel Scaling Efficiency | Throughput improvement ratio when switching to parallel execution.       | > 2x    | 2.2x (hash), 2.2x (health), 6.1x (sign) | Sign operations benefit most from parallelism |
+| Parallel Scaling Efficiency | Throughput improvement ratio when switching to parallel execution.       | > 2x    | 2.2x (hash), 2.2x (health), 6.1x | Sign operations benefit most from parallelism |
 
 #### Reliability Metrics
 
@@ -707,12 +707,12 @@ Observability metrics track the system's ability to expose internal state and be
 
 Quality metrics assess code correctness, test coverage, and compliance with cryptographic standards. High quality ensures reliable cryptographic operations and regulatory compliance.
 
-| Metric                             | Description                                                                                                                                                                     | Target         | Current State    | Notes                           |
-|------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------|------------------|---------------------------------|
-| Test Coverage                      | Percentage of source code lines executed during automated testing. High coverage reduces risk of undetected bugs in production.                                                 | > 80%          | Not yet measured | Unit and integration tests      |
-| E2E Test Pass Rate                 | Percentage of end-to-end integration tests passing in CI/CD pipeline. 100% pass rate ensures all components work together correctly.                                           | 100%           | 100%             | All tests passing               |
-| Known-Answer Test (KAT) Compliance | Percentage of cryptographic operations producing correct results against NIST test vectors. Validates implementation correctness.                                               | 100%           | 100%             | Validated against standards     |
-| FIPS Validation Status             | Official CMVP certification status of the cryptographic module. Certification required for regulated environments and government contracts.                                     | CMVP certified | Pending review   | Module v1.0.0 in process        |
+| Metric                             | Description                                                                      | Target         | Current State    | Notes                       |
+|------------------------------------|----------------------------------------------------------------------------------|----------------|------------------|-----------------------------|
+| Test Coverage                      | Percentage of source code lines executed during automated testing.               | > 80%          | Not yet measured | Unit and integration tests  |
+| E2E Test Pass Rate                 | Percentage of end-to-end integration tests passing in CI/CD pipeline.            | 100%           | 100%             | All tests passing           |
+| Known-Answer Test (KAT) Compliance | Percentage of cryptographic operations producing correct results against NIST.   | 100%           | 100%             | Validated against standards |
+| FIPS Validation Status             | Official CMVP certification status of the cryptographic module.                  | CMVP certified | Pending review   | Module v1.0.0 in process    |
 
 **Notes on KPI Measurement**:
 
