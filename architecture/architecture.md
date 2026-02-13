@@ -866,39 +866,36 @@ go version -m bin/cryptobroker-server
 
 #### Server-Side (Pure Crypto) Performance Comparison
 
-| Algorithm | Non-FIPS (ns/op) | FIPS (ns/op) | Overhead | Impact |
-|-----------|------------------|--------------|----------|--------|
-
-| SHA-256 | 419.2 | 422.7 | +3.5 ns | +0.8% (negligible) |
-| SHA-384 | 635.1 | 647.6 | +12.5 ns | +2.0% (negligible) |
-| SHA-512 | 698.5 | 707.1 | +8.6 ns | +1.2% (negligible) |
-| SHA-512/256 | 580.6 | 572.6 | -8.0 ns | -1.4% (negligible) |
-| SHA3-256 | 760.3 | 756.4 | -3.9 ns | -0.5% (negligible) |
-| SHA3-384 | 916.4 | 927.3 | +10.9 ns | +1.2% (negligible) |
-| SHA3-512 | 1,249 | 1,232 | -17 ns | -1.4% (negligible) |
-| SHAKE-128 | 577.0 | 579.3 | +2.3 ns | +0.4% (negligible) |
-| SHAKE-256 | 738.7 | 730.1 | -8.6 ns | -1.2% (negligible) |
+| Algorithm   | Non-FIPS (ns/op) | FIPS (ns/op) | Overhead | Impact             |
+|-------------|------------------|--------------|----------|--------------------|
+| SHA-256     | 419.2            | 422.7        | +3.5 ns  | +0.8% (negligible) |
+| SHA-384     | 635.1            | 647.6        | +12.5 ns | +2.0% (negligible) |
+| SHA-512     | 698.5            | 707.1        | +8.6 ns  | +1.2% (negligible) |
+| SHA-512/256 | 580.6            | 572.6        | -8.0 ns  | -1.4% (negligible) |
+| SHA3-256    | 760.3            | 756.4        | -3.9 ns  | -0.5% (negligible) |
+| SHA3-384    | 916.4            | 927.3        | +10.9 ns | +1.2% (negligible) |
+| SHA3-512    | 1,249            | 1,232        | -17 ns   | -1.4% (negligible) |
+| SHAKE-128   | 577.0            | 579.3        | +2.3 ns  | +0.4% (negligible) |
+| SHAKE-256   | 738.7            | 730.1        | -8.6 ns  | -1.2% (negligible) |
 
 #### Certificate Signing Performance Comparison
 
-| Configuration | Non-FIPS (μs) | FIPS (μs) | Overhead | Impact |
-|---------------|---------------|-----------|----------|--------|
-
-| Default (P-256) | 129 | 131 | +2 μs | +1.6% (negligible) |
-| P-521 / RSA-4096 | 1,658 | 1,654 | -4 μs | -0.2% (negligible) |
-| P-521 / P-521 | 2,658 | 2,663 | +5 μs | +0.2% (negligible) |
+| Configuration    | Non-FIPS (μs) | FIPS (μs) | Overhead | Impact             |
+|------------------|---------------|-----------|----------|--------------------|
+| Default (P-256)  | 129           | 131       | +2 μs    | +1.6% (negligible) |
+| P-521 / RSA-4096 | 1,658         | 1,654     | -4 μs    | -0.2% (negligible) |
+| P-521 / P-521    | 2,658         | 2,663     | +5 μs    | +0.2% (negligible) |
 
 #### Client-Side (End-to-End) Performance Comparison
 
-| Operation | Non-FIPS | FIPS | Overhead | Impact |
-|-----------|----------|------|----------|--------|
-
-| HashData (sync) | 87 μs | 85 μs | -2 μs | -2.3% (within margin of error) |
-| HashData (parallel) | 39 μs | 39 μs | 0 μs | No measurable difference |
-| SignCertificate (sync) | 975 μs | 914 μs | -61 μs | -6.3% (within measurement variance) |
-| SignCertificate (parallel) | 160 μs | 156 μs | -4 μs | -2.5% (within margin of error) |
-| HealthData (sync) | 81 μs | 77 μs | -4 μs | -4.9% (within margin of error) |
-| HealthData (parallel) | 37 μs | 36 μs | -1 μs | -2.7% (within margin of error) |
+| Operation                  | Non-FIPS | FIPS   | Overhead | Impact                              |
+|----------------------------|----------|--------|----------|-------------------------------------|
+| HashData (sync)            | 87 μs    | 85 μs  | -2 μs    | -2.3% (within margin of error)      |
+| HashData (parallel)        | 39 μs    | 39 μs  | 0 μs     | No measurable difference            |
+| SignCertificate (sync)     | 975 μs   | 914 μs | -61 μs   | -6.3% (within measurement variance) |
+| SignCertificate (parallel) | 160 μs   | 156 μs | -4 μs    | -2.5% (within margin of error)      |
+| HealthData (sync)          | 81 μs    | 77 μs  | -4 μs    | -4.9% (within margin of error)      |
+| HealthData (parallel)      | 37 μs    | 36 μs  | -1 μs    | -2.7% (within margin of error)      |
 
 #### Key Findings
 
