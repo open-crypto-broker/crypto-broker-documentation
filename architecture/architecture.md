@@ -1214,10 +1214,10 @@ livenessProbe:
 
 ### Documentation
 
-- [Architecture Documentation](crypto-broker-documentation/architecture/)
-- [API Specifications](crypto-broker-documentation/spec/)
-- [Architectural Decision Records](crypto-broker-documentation/adr/)
-- [Deployment Guide](crypto-broker-deployment/README.md)
+- [Architecture Documentation](./)
+- [API Specifications](../spec/)
+- [Architectural Decision Records](../adr/)
+- [Deployment Guide](../../crypto-broker-deployment/README.md)
 
 ### External Resources
 
@@ -1230,11 +1230,11 @@ livenessProbe:
 
 ### Key ADRs
 
-- **ADR-0002**: Cloud Foundry Deployment Strategy (Pre-compiled Binaries)
-- **ADR-0003**: Sidecar Architecture Alternatives
-- **ADR-0004**: Communication Protocol Selection (gRPC vs HTTP)
-- **ADR-0005**: Message Structure (Protocol Buffers)
-- **ADR-0007**: FIPS 140-3 Mode Implementation (Build-time Linking)
+- [**ADR-0002**: Cloud Foundry Deployment Strategy (Pre-compiled Binaries)](../adr/overall/0002-cf-deployment.md)
+- [**ADR-0003**: Sidecar Architecture Alternatives](../adr/overall/0003-sidecar-alternatives.md)
+- [**ADR-0004**: Communication Protocol Selection (gRPC vs HTTP)](../adr/overall/0004-communication-protocol.md)
+- [**ADR-0005**: Message Structure (Protocol Buffers)](../adr/overall/0005-message-structure.md)
+- [**ADR-0007**: FIPS 140-3 Mode Implementation (Build-time Linking)](../adr/overall/0007-fips140-3-mode.md)
 
 ---
 
