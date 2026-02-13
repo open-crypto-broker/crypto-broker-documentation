@@ -1217,7 +1217,7 @@ livenessProbe:
 - [Architecture Documentation](./)
 - [API Specifications](../spec/)
 - [Architectural Decision Records](../adr/)
-- [Deployment Guide](../../crypto-broker-deployment/README.md)
+- [Deployment Guide](https://github.com/open-crypto-broker/crypto-broker-deployment)
 
 ### External Resources
 
