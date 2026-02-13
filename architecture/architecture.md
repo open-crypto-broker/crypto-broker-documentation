@@ -27,7 +27,7 @@ enabling centralized crypto policy management, easy algorithm updates, and compl
 - **Centralized Cryptographic Operations**: Profile-based configuration for consistent crypto policy management across applications
 - **Multi-Language Support**: Client libraries available in Go and JavaScript/Node.js (with more languages planned)
 - **FIPS 140-3 Compliance**: Built-in support for FIPS 140-3 validated cryptographic modules
-- **Cloud-Native**: Deployable on Cloud Foundry and Kubernetes
+- **Cloud-Native**: Containerized architecture deployable via Kubernetes or Cloud Foundry
 - **High Performance**: Optimized communication via gRPC over Unix domain sockets
 - **Observability**: OpenTelemetry tracing support for distributed observability
 
@@ -39,38 +39,17 @@ The Crypto Broker follows the C4 model for architectural documentation. The syst
 
 ### System Context
 
-The System Context diagram shows the highest-level view of the CryptoAgility project. Users interact with the system to perform cryptographic operations. This abstraction hides the internal complexity of how cryptographic services are delivered, focusing on the external boundary of the system.
+The System Context diagram shows the highest-level view of the [Crypto Agility](https://apeirora.eu/content/impact/security-kms/) project. Users interact with the system to perform cryptographic operations. This abstraction hides the internal complexity of how cryptographic services are delivered, focusing on the external boundary of the system.
 
-```mermaid
-C4Context
-    title System Context Diagram for CryptoAgility Project
-
-    Person_Ext(user, "User")
-    System(sys, "CryptoAgility")
-
-    BiRel(user, sys, "Uses")
-```
+![System Context Diagram](c4/c1-system.md)
 
 ### Container View
 
 The Container diagram reveals the internal structure of the CryptoAgility system. It shows two primary containers: the Application (which integrates the client library) and the Crypto Broker server. This illustrates the sidecar pattern where both containers run on the same host, with the application using the Crypto Broker to handle all cryptographic operations. Users interact directly with the application, which transparently delegates crypto tasks to the server.
 
-```mermaid
-C4Container
-    title Container Diagram for CryptoAgility Project
+![Container Diagram](c4/c2-container.md)
 
-    Person_Ext(user, "User")
-
-    System_Boundary(container, "CryptoAgility") {
-        Container(app, "Application")
-        Container(cb, "Crypto Broker server")
-        BiRel(app, cb, "Uses")
-    }
-
-    BiRel(user, app, "Uses")
-```
-
-### Request Flow
+### Sequence diagram
 
 The Request Flow sequence diagram illustrates both the deployment model and the complete lifecycle of a cryptographic operation request. The diagram shows two separate containers/processes (Client-Container and Server-Container) representing the sidecar deployment pattern.
 
@@ -104,124 +83,9 @@ sequenceDiagram
     Crypto Broker client ->> Application: Return result
 ```
 
-### Use Case Example: Certificate Signing Service
-
-This section demonstrates how the Crypto Broker architecture applies to a real-world scenario based on the Certificate Service use case. In this example, a certificate service application runs a local certificate authority (CA) that provisions certificates for client applications.
-
-#### Traditional Certificate Service Architecture
-
-In a traditional setup, the certificate service directly handles all cryptographic operations. When a client requests a certificate:
-
-1. Client application creates and sends a Certificate Signing Request (CSR) via HTTP/HTTPS
-2. Local CA receives the CSR
-3. Local CA retrieves the CA signing key and certificate
-4. Local CA applies pre-defined certificate extensions
-5. Local CA signs the certificate using its private key
-6. Signed certificate is returned to the client
-
-```mermaid
-graph TD
-    
-    subgraph ca [Certificate Service Local-CA]
-        C[Provide CA key<br/>and Certificate]
-        D[Provide Certificate<br/>Extensions]
-        E[Sign Certificate]
-        C --> E
-        D --> E
-    end
-    
-    subgraph client [Client application]
-        A[Create and send CSR]
-        B[Get Certificate]
-    end
-    
-    A == HTTP/HTTPS ==> E
-    E == HTTP/HTTPS ==> B
-```
-
-**Limitations of Traditional Approach**:
-
-- Cryptographic logic embedded in application code
-- Algorithm changes require code modifications and redeployment
-- Difficult to enforce consistent crypto policy across multiple services
-- Compliance updates (e.g., algorithm deprecation) require application updates
-
-#### Crypto Broker-Enhanced Architecture
-
-Using the Crypto Broker, the certificate service delegates cryptographic operations to a dedicated server while retaining control of certificate lifecycle management:
-
-1. Client application creates and sends CSR via HTTP/HTTPS to the certificate service
-2. Certificate service receives the CSR
-3. Certificate service uses the **Crypto Broker client** to prepare the signing request
-4. Request is sent via **IPC (gRPC over Unix socket)** to the Crypto Broker server
-5. Crypto Broker server validates the request against the **Crypto Profile** (certificate policy and extensions)
-6. Crypto Broker server performs the signing operation using the provided CA key
-7. Signed certificate is returned via IPC to the certificate service
-8. Certificate service returns the signed certificate to the client via HTTP/HTTPS
-
-```mermaid
-graph TD
-    subgraph broker [Crypto Broker server]
-        P[<b>Crypto Profile</b><br/>Certificate Policy<br/>Extensions Rules]
-        F[Receive Request]
-        G[Process Request<br/>& Validate Policy]
-        H[Sign & Return<br/>Response]
-        F --> G
-        G --> H
-        P -.Policy.-> G
-    end
-    
-    subgraph ca [Certificate Service Local-CA]
-        C[Provide CA key<br/>and Certificate]
-        subgraph brokerlib [Crypto Broker client]
-            direction TB
-            D[Create Request]
-            E[Process Response]
-        end
-        C --> D
-    end
-    
-    subgraph client [Client application]
-        A[Create and send CSR]
-        B[Get Certificate]
-    end
-    
-    A == HTTP/HTTPS ==> D
-    E == HTTP/HTTPS ==> B
-    D == IPC via gRPC ==> F
-    H == IPC via gRPC ==> E
-```
-
-**Benefits of Crypto Broker Integration**:
-
-1. **Crypto Agility**: Algorithm changes require only profile updates, not code changes
-   - Switch from ECDSA P-256 to P-384 without redeploying the certificate service
-   - Update certificate extension policies centrally
-
-2. **Separation of Concerns**:
-   - Certificate service focuses on business logic (CSR validation, lifecycle management)
-   - Crypto Broker handles cryptographic operations and policy enforcement
-
-3. **Consistent Policy Enforcement**:
-   - Crypto Profile defines certificate attributes, key usage, and validity rules
-   - Same profile can be shared across multiple certificate services
-   - Policy updates apply immediately without service restarts
-
-4. **Compliance and Auditability**:
-   - All cryptographic operations traced via OpenTelemetry
-   - FIPS 140-3 compliance enforced at the Crypto Broker level
-   - Centralized audit trail for certificate signing operations
-
-5. **Security Isolation**:
-   - CA private key passed per-request (not persisted by Crypto Broker)
-   - Cryptographic operations isolated in separate process
-   - File system permissions control access to Unix socket
-
-This example demonstrates the core value proposition: applications delegate cryptographic complexity to the Crypto Broker while maintaining full control over their business logic and certificate lifecycle management.
-
 ---
 
-## Component Description
+## Repositories Overview
 
 ### 1. Crypto Broker Server
 
@@ -341,51 +205,30 @@ Included as a Git submodule in both server and client repositories to ensure con
 
 ## Communication Architecture
 
-### Protocol Selection: gRPC over Unix Domain Sockets
+The Crypto Broker uses **gRPC over Unix domain sockets** for client-server communication. This design (detailed in ADR-0004) balances performance, security, and maintainability.
 
-**Why gRPC?**
+### Why gRPC?
 
-The Crypto Broker uses gRPC as the communication protocol between client and server. This decision (documented in ADR-0004) was made based on:
+gRPC was selected over HTTP/JSON based on comprehensive benchmarking (1000 samples per configuration) across hash and certificate signing operations:
 
-**Advantages of gRPC**:
+- **Binary Efficiency**: Protobuf reduces payload size by 30-40% compared to JSON, critical for certificate operations containing binary data (CSRs, keys, certificates)
+- **Concurrency**: HTTP/2 multiplexing significantly improves performance under concurrent load
+- **Type Safety**: Strong typing and schema validation prevent integration errors
+- **Multi-Language Support**: Code generation for Go, JavaScript/Node.js, and future client libraries
+- **Streaming**: Built-in bidirectional streaming for future use cases
+- **Lower IPC Overhead**: Consistently faster net transmission time compared to HTTP
 
-- **Compact Binary Format**: Protobuf is more efficient than JSON, especially for binary data (certificates, keys)
-- **Type Safety**: Strong typing and schema validation
-- **Streaming Support**: Built-in support for bidirectional streaming (future use cases)
-- **Tooling**: Excellent code generation for multiple languages
-- **Performance**: Better throughput for larger payloads and concurrent requests
-- **HTTP/2**: Multiplexing, header compression, and flow control
-
-**Performance Comparison**:
-
-The protocol selection was evaluated through comprehensive benchmarking as documented in ADR-0004. The evaluation compared gRPC and HTTP across 1000 samples per combination, testing hash and sign operations with both native Go crypto and OpenSSL in Docker and local environments.
-
-**Key Findings from ADR-0004**:
-
-- **Payload Efficiency**: Protobuf binary encoding reduces payload size by 30-40% compared to JSON, especially significant for certificate operations containing binary data (CSR, private keys, CA certificates)
-- **Latency**: For small payloads (hash operations), protocol latency difference is marginal; for larger operations (certificate signing), gRPC shows measurable performance improvement
-- **Concurrency**: gRPC performs significantly better with concurrent requests due to HTTP/2 multiplexing capabilities
-- **IPC Overhead**: Net transmission time (client_duration - server_duration) is consistently lower for gRPC
-- **Computational Dominance**: When using OpenSSL as crypto provider, the computational overhead dominates, making IPC protocol choice less impactful on total latency
-
-**Note**: HTTP support has been removed from the current implementation. The Crypto Broker exclusively uses gRPC over Unix domain sockets.
+Benchmarking showed that for certificate signing operations, gRPC provides measurable latency improvements, while for smaller payloads (hash operations) the difference is marginal but still favorable.
 
 ### Unix Domain Sockets
 
-Communication occurs over Unix domain sockets at `/tmp/cryptobroker.sock`:
-
-**Benefits**:
+Communication occurs over Unix sockets at `/tmp/cryptobroker.sock`, providing:
 
 - **Performance**: No network stack overhead
-- **Security**: File system permissions control access
-- **Simplicity**: No port management or network configuration
-- **Local-only**: Prevents remote attacks by design
+- **Security**: File system permissions control access; prevents remote attacks
+- **Simplicity**: No port management or network configuration required
 
-**Deployment Model**:
-
-- Server and client run in separate containers/processes on the same host
-- Shared volume mount for the socket file
-- Client connects via the socket path, establishes gRPC connection
+Server and client run in separate containers/processes on the same host with a shared volume mount for the socket file
 
 ---
 
@@ -395,47 +238,41 @@ Communication occurs over Unix domain sockets at `/tmp/cryptobroker.sock`:
 
 The Crypto Broker provides a dedicated benchmarking API (`BenchmarkData`) that allows:
 
-- Server-side performance measurement
-- Configurable iteration counts
-- Multiple operation types
-- Detailed performance metrics
+- Server-side performance measurement of all cryptographic operations
+- Automatic iteration count determination for statistical validity
+- Comprehensive results across multiple algorithms (hash, signing)
+- Detailed performance metrics (average time per operation)
 
-This API enables comprehensive performance evaluation through controlled testing.
+This API enables comprehensive performance evaluation through controlled testing using Go's benchmark framework.
 
 ---
 
 ### Benchmarking Methodology
 
-The Crypto Broker performance evaluation consists of three complementary benchmark suites:
+The Crypto Broker performance evaluation consists of two complementary benchmark suites:
 
 1. **Client-Side (End-to-End) Benchmarks**:
    - Measures complete request lifecycle from application to result
    - Includes client library overhead, IPC communication, server processing, and cryptographic operations
    - Uses Go benchmark framework with variable iteration counts for statistical significance
    - Tests both synchronous and parallel execution modes
-   - Platform: macOS (darwin/arm64), Apple M2 Pro
    - Source: `crypto-broker-client-go` benchmark suite
 
 2. **Server-Side (Pure Crypto) Benchmarks**:
    - Measures cryptographic operation performance in isolation (no IPC overhead)
    - Direct invocation of crypto functions within server process
    - Uses Go benchmark framework with high iteration counts
-   - Platform: macOS (darwin/arm64), Apple M2 Pro
    - Source: `crypto-broker-server/internal/bench` test suite
 
-3. **CLI Operational Benchmarks**:
-   - User-friendly command-line tool for operational performance testing
-   - Invokes server's benchmark API which runs all crypto benchmarks server-side
-   - Returns aggregated results in JSON format for easy consumption
-   - Measures pure crypto performance (similar to server-side benchmarks)
-   - Platform: macOS (darwin/arm64), Apple M2 Pro
-   - Source: `crypto-broker-cli-go` benchmark command
-   - Use cases: Pre-deployment validation, regression testing, performance baselining
+By comparing these two benchmark types, we can derive communication overhead and quantify the benefit of parallel execution vs synchronous mode
 
-4. **Communication Overhead Analysis**:
-   - Derived by comparing server-side (pure crypto) with client-side (end-to-end) measurements
-   - Reveals IPC overhead components: serialization, socket I/O, gRPC processing
-   - Quantifies benefit of parallel execution vs synchronous mode
+**Test Configuration**:
+
+- **Platform**: macOS (darwin/arm64)
+- **CPU**: Apple M2 Pro
+- **Profile**: Default (client-side benchmarks)
+- **Parallelism**: GOMAXPROCS=10 (10 concurrent goroutines for parallel benchmarks)
+- **Methodology**: Go benchmark framework with automatic iteration count determination
 
 ---
 
@@ -450,14 +287,6 @@ The client-side benchmarks measure complete end-to-end performance from applicat
 - Benchmarks run in two modes: synchronous (sequential operations) and parallel (10 concurrent goroutines)
 - Go's benchmark framework automatically determines optimal iteration counts for statistical validity
 - Results include both latency (time per operation) and throughput (operations per second)
-
-**Test Configuration**:
-
-- **Platform**: macOS (darwin/arm64)
-- **CPU**: Apple M2 Pro
-- **Profile**: Default
-- **Parallelism**: GOMAXPROCS=10 (10 concurrent goroutines for parallel benchmarks)
-- **Methodology**: Go benchmark framework with variable iteration counts for statistical significance
 
 #### Hash Operations
 
@@ -517,13 +346,6 @@ The server-side benchmarks measure pure cryptographic operation performance in i
 - Provides baseline for comparing against end-to-end client-side benchmarks to quantify IPC overhead
 - Run via: `task run-benchmarks` or `go test -bench=.`
 
-**Test Configuration**:
-
-- **Platform**: macOS (darwin/arm64)
-- **CPU**: Apple M2 Pro
-- **Source**: `crypto-broker-server/internal/bench` test suite
-- **Methodology**: Go benchmark framework with automatic iteration count determination
-
 #### Hash Operations (Pure Crypto)
 
 | Algorithm   | Latency (ns/op) | Latency (μs) | Throughput             |
@@ -559,12 +381,6 @@ The server-side benchmarks measure pure cryptographic operation performance in i
 - Larger key sizes significantly increase computation time
 - ECDSA P-521 with P-521 CA is most expensive (~2.66 ms)
 - RSA-4096 signing takes ~1.66 ms
-
----
-
-### CLI Benchmark Results (Operational Testing)
-
-**Note**: CLI benchmark results are not included in this report as they closely mirror the server-side pure crypto benchmarks shown above. The CLI tool internally invokes the server's benchmark API, producing results nearly identical to the server-side measurements. For operational testing and performance validation, refer to the server-side benchmark results or use the CLI tool directly via `task test-benchmark` in the `crypto-broker-cli-go` repository.
 
 ---
 
@@ -748,8 +564,7 @@ Quality metrics assess code correctness, test coverage, and compliance with cryp
    - Latency and throughput metrics derived from Go benchmark framework tests
    - Client-side benchmarks: `crypto-broker-client-go` test suite with variable iteration counts for statistical significance
    - Server-side benchmarks: `crypto-broker-server/internal/bench` test suite with high iteration counts
-   - Test platform: macOS (darwin/arm64), Apple M2 Pro
-   - Parallel tests: GOMAXPROCS=10 (10 concurrent goroutines)
+   - See Test Configuration section above for platform and methodology details
 
 3. **Measurement Accuracy**:
    - Go benchmark framework automatically determines iteration counts for statistical validity
@@ -847,7 +662,7 @@ go version -m bin/cryptobroker-server
 
 ### Performance Impact of FIPS Mode
 
-**Current Deployment**:
+**FIPS Configuration**:
 
 - FIPS Module: Go Cryptographic Module v1.0.0-c2097c7c
 - Build command: `GOFIPS140=v1.0.0 go build ...`
@@ -855,14 +670,9 @@ go version -m bin/cryptobroker-server
 - Default GODEBUG: `fips140=on`
 - Go version: 1.25.5
 
-**Measurement Methodology**:
+**Comparison Baseline**:
 
-- Platform: macOS (darwin/arm64), Apple M2 Pro
-- FIPS Module: Go Cryptographic Module v1.0.0-c2097c7c (GOFIPS140=v1.0.0-c2097c7c)
-- Build tags: `-tags=fips140v1.0`
-- Go version: 1.25.5
-- Non-FIPS baseline: Standard Go crypto libraries
-- Test date: February 2026
+- Non-FIPS: Standard Go crypto libraries (same test configuration as Performance Evaluation section)
 
 #### Server-Side (Pure Crypto) Performance Comparison
 
