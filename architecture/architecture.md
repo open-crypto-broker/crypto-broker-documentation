@@ -15,7 +15,11 @@
 
 ## Overview
 
-The Crypto Broker is a cryptographic service that provides crypto agility by offloading cryptographic operations from applications. It can be deployed in any environment—cloud, on-premises, or local—as long as the core deployment requirements are met: the server and client must run on the same host but in separate processes, communicating via Unix domain sockets. It follows a sidecar pattern where applications delegate cryptographic operations to a dedicated server component, enabling centralized crypto policy management, easy algorithm updates, and compliance with regulatory requirements such as FIPS 140-3.
+The Crypto Broker is a cryptographic service that provides crypto agility by offloading cryptographic operations from applications.
+It can be deployed in any environment—cloud, on-premises, or local—as long as the core deployment requirements are met:
+the server and client must run on the same host but in separate processes, communicating via Unix domain sockets.
+It follows a sidecar pattern where applications delegate cryptographic operations to a dedicated server component,
+enabling centralized crypto policy management, easy algorithm updates, and compliance with regulatory requirements such as FIPS 140-3.
 
 ### Key Features
 
@@ -458,7 +462,7 @@ The client-side benchmarks measure complete end-to-end performance from applicat
 #### Hash Operations
 
 | Operation | Mode | Latency (ns/op) | Latency (μs) | Throughput | Memory | Allocations |
-|-----------|------|----------------|--------------|------------|---------|-------------|
+|-----------|------|-----------------|--------------|------------|---------|-------------|
 | HashData | Synchronous | 87,424 | ~87 μs | ~11,400 ops/sec | 9,284 B/op | 135 allocs/op |
 | HashData | Parallel | 39,441 | ~39 μs | ~25,400 ops/sec | 9,320 B/op | 135 allocs/op |
 
@@ -472,7 +476,7 @@ The client-side benchmarks measure complete end-to-end performance from applicat
 #### Health Check Operations
 
 | Operation | Mode | Latency (ns/op) | Latency (μs) | Throughput | Memory | Allocations |
-|-----------|------|----------------|--------------|------------|---------|-------------|
+|-----------|------|-----------------|--------------|------------|---------|-------------|
 | HealthData | Synchronous | 81,035 | ~81 μs | ~12,300 ops/sec | 8,406 B/op | 124 allocs/op |
 | HealthData | Parallel | 36,971 | ~37 μs | ~27,000 ops/sec | 8,442 B/op | 124 allocs/op |
 
@@ -485,7 +489,7 @@ The client-side benchmarks measure complete end-to-end performance from applicat
 #### Certificate Signing Operations
 
 | Operation | Mode | Latency (ns/op) | Latency (μs/ms) | Throughput | Memory | Allocations |
-|-----------|------|----------------|-----------------|------------|---------|-------------|
+|-----------|------|-----------------|-----------------|------------|---------|-------------|
 | SignCertificate | Synchronous | 974,806 | ~975 μs (~0.98 ms) | ~1,025 ops/sec | 19,864 B/op | 150 allocs/op |
 | SignCertificate | Parallel | 159,615 | ~160 μs (~0.16 ms) | ~6,265 ops/sec | 20,005 B/op | 150 allocs/op |
 
@@ -523,7 +527,7 @@ The server-side benchmarks measure pure cryptographic operation performance in i
 #### Hash Operations (Pure Crypto)
 
 | Algorithm | Latency (ns/op) | Latency (μs) | Throughput |
-|-----------|----------------|--------------|------------|
+|-----------|-----------------|--------------|------------|
 | SHA-256 | 419.2 | ~0.42 μs | ~2,386,000 ops/sec |
 | SHA-384 | 635.1 | ~0.64 μs | ~1,575,000 ops/sec |
 | SHA-512 | 698.5 | ~0.70 μs | ~1,432,000 ops/sec |
@@ -544,7 +548,7 @@ The server-side benchmarks measure pure cryptographic operation performance in i
 #### Certificate Signing Operations (Pure Crypto)
 
 | Configuration | Latency (ns/op) | Latency (μs/ms) | Throughput |
-|---------------|----------------|-----------------|------------|
+|---------------|-----------------|-----------------|------------|
 | Default Profile | 128,650 | ~129 μs (~0.13 ms) | ~7,773 ops/sec |
 | NIST P-521 / NIST P-521 | 2,657,564 | ~2,658 μs (~2.66 ms) | ~376 ops/sec |
 | NIST P-521 / RSA-4096 | 1,658,460 | ~1,658 μs (~1.66 ms) | ~603 ops/sec |
@@ -570,9 +574,9 @@ By comparing server-side (pure crypto) with client-side (end-to-end) benchmarks,
 
 #### Hash Operations Overhead
 
-| Metric | Server-Side (Pure Crypto) | Client-Side Sync | Client-Side Parallel | Sync Overhead | Parallel Overhead |
-|--------|--------------------------|------------------|---------------------|---------------|-------------------|
-| Hash Operation | ~0.76 μs (SHA3-256) | 87 μs | 39 μs | ~86 μs | ~38 μs |
+| Metric         | Server-Side (Pure Crypto) | Client-Side Sync | Client-Side Parallel | Sync Overhead | Parallel Overhead |
+|----------------|---------------------------|------------------|----------------------|---------------|-------------------|
+| Hash Operation | ~0.76 μs (SHA3-256)       | 87 μs            | 39 μs                | ~86 μs        | ~38 μs            |
 
 **Analysis**:
 
@@ -583,9 +587,9 @@ By comparing server-side (pure crypto) with client-side (end-to-end) benchmarks,
 
 #### Certificate Signing Overhead
 
-| Metric | Server-Side (Pure Crypto) | Client-Side Sync | Client-Side Parallel | Sync Overhead | Parallel Overhead |
-|--------|--------------------------|------------------|---------------------|---------------|-------------------|
-| Sign (Default) | ~129 μs | 975 μs | 160 μs | ~846 μs | ~31 μs |
+| Metric         | Server-Side (Pure Crypto) | Client-Side Sync | Client-Side Parallel | Sync Overhead | Parallel Overhead |
+|----------------|---------------------------|------------------|----------------------|---------------|-------------------|
+| Sign (Default) | ~129 μs                   | 975 μs           | 160 μs               | ~846 μs       | ~31 μs            |
 
 **Analysis**:
 
@@ -660,18 +664,18 @@ Latency metrics measure the time delay for cryptographic operations, critical fo
 Throughput metrics measure the volume of cryptographic operations the server can process per unit time. High throughput is essential for applications with high request volumes or batch processing requirements.
 
 | Metric | Description | Target | Current Performance | Notes |
-|--------|-------------|--------|--------------------|---------|
+|--------|-------------|--------|---------------------|-------|
 | Hash Operations/sec | Number of hash computations completed per second under sustained load. Indicates capacity for high-volume hashing workloads. | > 8,000 | 11,400 (sync), 25,400 (parallel) | Exceeds target significantly |
 | Sign Operations/sec | Number of certificate signing operations completed per second. More computationally expensive than hashing, varies significantly by algorithm and key size. | > 750 | 1,025 (sync), 6,265 (parallel) | Exceeds target significantly |
 | Health Check Operations/sec | Number of health checks completed per second. Useful for high-frequency monitoring and availability validation. | > 8,000 | 12,300 (sync), 27,000 (parallel) | Excellent monitoring capacity |
-| Parallel Scaling Efficiency | Throughput improvement ratio when switching from synchronous to parallel execution. Indicates effectiveness of concurrent request handling. Note: This metric measures the same parallel execution as "Parallel Performance Gain" in Latency Metrics but from a throughput perspective. Both are needed because they measure different aspects: latency measures per-operation response time improvement (user experience), while throughput measures total operations-per-second capacity improvement (system capacity). A system can have good latency gains but poor throughput scaling if parallelism doesn't increase total capacity. Target represents minimum acceptable scaling observed in parallel benchmarks. | > 2x | 2.2x (hash), 2.2x (health), 6.1x (sign) | Sign operations benefit most from parallelism |
+| Parallel Scaling Efficiency | Throughput improvement ratio when switching from synchronous to parallel execution. Indicates effectiveness of concurrent request handling. Note: This metric measures the same parallel execution as "Parallel Performance Gain" in Latency Metrics but from a throughput perspective. Both are needed because they measure different aspects: latency measures per-operation response time improvement (user experience), while throughput measures total operations-per-second capacity improvement (system capacity). Target represents minimum acceptable scaling. | > 2x | 2.2x (hash), 2.2x (health), 6.1x (sign) | Sign operations benefit most from parallelism |
 
 #### Reliability Metrics
 
 Reliability metrics track system availability, fault tolerance, and recovery capabilities. High reliability ensures cryptographic services remain available even during failures, minimizing application disruption.
 
 | Metric | Description | Target | Current Performance | Notes |
-|--------|-------------|--------|--------------------|---------|
+|--------|-------------|--------|---------------------|-------|
 | Server Crash Recovery Time (K8s) | Time from server container crash to full service restoration in Kubernetes. Includes detection, restart, and socket availability. While K8s controls restart timing, this metric tracks the total application recovery experience. It validates that crypto-broker's design (fast startup, no state persistence requirements) enables rapid recovery within orchestration constraints. | < 10s | 2-5s | Kubernetes restart policy |
 | Server Crash Recovery Time (CF) | Time from sidecar process crash to full service restoration in Cloud Foundry. Includes CF health check detection and process restart. This metric validates that crypto-broker's sidecar design integrates properly with CF's health monitoring and that application code handles transient crypto-broker unavailability gracefully (connection retries, circuit breakers). | < 15s | 5-10s | Cloud Foundry process monitoring |
 | Request Success Rate | Percentage of requests that complete successfully without errors. High rate indicates stable operation and proper error handling. | > 99.9% | Not yet measured | Requires production telemetry |
@@ -682,7 +686,7 @@ Reliability metrics track system availability, fault tolerance, and recovery cap
 Scalability indicators measure resource efficiency and the system's ability to handle increased load through horizontal or vertical scaling. Efficient resource usage enables cost-effective deployment at scale.
 
 | Metric | Description | Target | Current State | Notes |
-|--------|-------------|--------|---------------|---------|
+|--------|-------------|--------|---------------|-------|
 | Memory per Server Instance | RAM consumed by a single server instance including Go runtime overhead. Low memory footprint enables dense deployment in resource-constrained environments. Target: < 100MB (architectural requirement for sidecar deployment efficiency). Current State: ~50-70MB (estimated from similar Go gRPC services; actual values should be measured via kubectl top pod or cf app). | < 100MB | ~50-70MB | To be measured via kubectl/cf CLI |
 | CPU Utilization (idle) | CPU percentage used when server is running but processing no requests. Low idle usage indicates efficient resource sharing with application containers. Target: < 5% (ensures minimal impact on application container CPU quota). Current State: ~2-3% (estimated from idle Go process baseline; measure via kubectl top or ps aux). | < 5% | ~2-3% | To be measured via kubectl/cf CLI |
 | CPU Utilization (load) | CPU percentage used during active request processing. Sustained high utilization may indicate need for horizontal scaling or optimization. Target: < 80% (keeps headroom for burst traffic). Current State: Varies by operation (depends on algorithm complexity and request rate; measure during load testing). | < 80% | Varies by operation | To be measured during benchmarks |
@@ -693,7 +697,7 @@ Scalability indicators measure resource efficiency and the system's ability to h
 Observability metrics track the system's ability to expose internal state and behavior for monitoring, debugging, and performance analysis. Comprehensive observability enables proactive issue detection and rapid troubleshooting.
 
 | Metric | Description | Target | Current State | Notes |
-|--------|-------------|--------|---------------|---------|
+|--------|-------------|--------|---------------|-------|
 | Trace Coverage | Percentage of crypto operations instrumented with distributed tracing spans. Complete coverage enables end-to-end request flow analysis and latency attribution. | 100% of operations | 100% | OpenTelemetry integration |
 | Structured Logging | Percentage of log events emitted in machine-parsable format with consistent fields. Enables automated log analysis and alerting. | 100% of events | 100% | JSON/text format |
 | Health Check Availability | Percentage of time health check endpoint responds correctly. Enables automated monitoring and orchestration platform integration. | 100% | 100% | gRPC health protocol |
@@ -704,7 +708,7 @@ Observability metrics track the system's ability to expose internal state and be
 Quality metrics assess code correctness, test coverage, and compliance with cryptographic standards. High quality ensures reliable cryptographic operations and regulatory compliance.
 
 | Metric | Description | Target | Current State | Notes |
-|--------|-------------|--------|---------------|---------|
+|--------|-------------|--------|---------------|-------|
 | Test Coverage | Percentage of source code lines executed during automated testing. High coverage reduces risk of undetected bugs in production. | > 80% | Not yet measured | Unit and integration tests |
 | E2E Test Pass Rate | Percentage of end-to-end integration tests passing in CI/CD pipeline. 100% pass rate ensures all components work together correctly. | 100% | 100% | All tests passing |
 | Known-Answer Test (KAT) Compliance | Percentage of cryptographic operations producing correct results against NIST test vectors. Validates implementation correctness. | 100% | 100% | Validated against standards |
@@ -725,11 +729,13 @@ Quality metrics assess code correctness, test coverage, and compliance with cryp
        - Heavy operations (>5KB payload): ~850 μs (certificate signing)
      - `β (system_margin)`: 0.40 (40% margin for IPC variance and system differences)
    - **Example Calculation** (Hash Operation):
+
      ```text
      Baseline_Crypto = 0.76 μs (SHA3-256)
      IPC_Overhead = 86 μs (lightweight class)
      Target = (0.76 × 1.25) + (86 × 1.40) = 0.95 + 120.4 = 121.35 μs ≈ 125 μs
      ```
+
    - **System Dependency**: IPC overhead values measured on reference platform (macOS/darwin/arm64, Apple M2 Pro). Actual overhead may vary by 30-50% on different hardware/architectures
    - **Throughput Targets**: Derived from latency targets using `Throughput = 1 / Target_Latency`
    - **Memory Targets**: Calculated from maximum observed memory usage across all operations
@@ -803,11 +809,13 @@ The Crypto Broker supports FIPS 140-3 compliance for environments requiring vali
 **Decision**: Build-time linking to a specific validated module version with `GOFIPS140`
 
 **Build Command**:
+
 ```bash
 GOFIPS140=v1.0.0 go build -o bin/cryptobroker-server cmd/server/server.go
 ```
 
 **Verification**:
+
 ```bash
 go version -m bin/cryptobroker-server
 # Output includes:
@@ -860,6 +868,7 @@ go version -m bin/cryptobroker-server
 
 | Algorithm | Non-FIPS (ns/op) | FIPS (ns/op) | Overhead | Impact |
 |-----------|------------------|--------------|----------|--------|
+
 | SHA-256 | 419.2 | 422.7 | +3.5 ns | +0.8% (negligible) |
 | SHA-384 | 635.1 | 647.6 | +12.5 ns | +2.0% (negligible) |
 | SHA-512 | 698.5 | 707.1 | +8.6 ns | +1.2% (negligible) |
@@ -874,6 +883,7 @@ go version -m bin/cryptobroker-server
 
 | Configuration | Non-FIPS (μs) | FIPS (μs) | Overhead | Impact |
 |---------------|---------------|-----------|----------|--------|
+
 | Default (P-256) | 129 | 131 | +2 μs | +1.6% (negligible) |
 | P-521 / RSA-4096 | 1,658 | 1,654 | -4 μs | -0.2% (negligible) |
 | P-521 / P-521 | 2,658 | 2,663 | +5 μs | +0.2% (negligible) |
@@ -882,6 +892,7 @@ go version -m bin/cryptobroker-server
 
 | Operation | Non-FIPS | FIPS | Overhead | Impact |
 |-----------|----------|------|----------|--------|
+
 | HashData (sync) | 87 μs | 85 μs | -2 μs | -2.3% (within margin of error) |
 | HashData (parallel) | 39 μs | 39 μs | 0 μs | No measurable difference |
 | SignCertificate (sync) | 975 μs | 914 μs | -61 μs | -6.3% (within measurement variance) |
