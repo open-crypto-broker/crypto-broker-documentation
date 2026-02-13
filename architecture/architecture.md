@@ -652,56 +652,56 @@ The following KPIs are tracked to ensure the Crypto Broker meets performance and
 Latency metrics measure the time delay for cryptographic operations, critical for applications requiring real-time or near-real-time responses. Lower latency improves user experience and enables higher throughput in request-heavy scenarios.
 
 | Metric | Description | Target | Current Performance | Notes |
-|--------|-------------|--------|--------------------|---------|
-| Hash Operation Latency | Time to compute a hash of arbitrary data using SHA-2/SHA-3 algorithms. Measures end-to-end time from client API call to result. | < 125μs | 87μs (sync), 39μs (parallel) | Below target in both modes |
-| Sign Operation Latency | Time to generate an X.509 certificate from a CSR. Measures complete operation including IPC, server processing, and cryptographic signing. | < 1.4ms | 975μs (sync), 160μs (parallel) | Well below target |
-| Health Check Latency | Time to query server health status. Fastest operation for monitoring and availability checks. | < 125μs | 81μs (sync), 37μs (parallel) | Minimal overhead |
-| Parallel Performance Gain | Performance improvement when executing operations concurrently versus sequentially. Indicates gRPC/HTTP2 multiplexing efficiency. Target represents minimum acceptable performance improvement observed in parallel benchmarks. | > 2x | 2.2x (hash), 2.2x (health), 6.1x (sign) | Excellent concurrent scaling |
-| Memory per Operation | RAM allocated per cryptographic operation. Lower values enable higher density and reduced GC (Garbage Collection) pressure. GC is Go's automatic memory management system that reclaims unused memory. Fewer allocations mean less GC overhead and better performance. Target calculated from maximum observed memory (20KB) with 60% margin. | < 35KB | 9KB (hash), 8KB (health), 20KB (sign) | Lightweight memory footprint |
+|--------|-------------|--------|---------------------|-------|
+| Hash Operation Latency | Time to compute a hash of arbitrary data using SHA-2/SHA-3 algorithms. | < 125μs | 87μs (sync), 39μs (parallel) | Below target in both modes |
+| Sign Operation Latency | Time to generate an X.509 certificate from a CSR. | < 1.4ms | 975μs (sync), 160μs (parallel) | Well below target |
+| Health Check Latency | Time to query server health status. | < 125μs | 81μs (sync), 37μs (parallel) | Minimal overhead |
+| Parallel Performance Gain | Performance improvement when executing operations concurrently. | > 2x | 2.2x (hash), 2.2x (health), 6.1x (sign) | Excellent concurrent scaling |
+| Memory per Operation | RAM allocated per cryptographic operation. | < 35KB | 9KB (hash), 8KB (health), 20KB (sign) | Lightweight memory footprint |
 
 #### Throughput Metrics
 
 Throughput metrics measure the volume of cryptographic operations the server can process per unit time. High throughput is essential for applications with high request volumes or batch processing requirements.
 
-| Metric                      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Target  | Current Performance              | Notes                                 |
-|-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|----------------------------------|---------------------------------------|
-| Hash Operations/sec         | Number of hash computations completed per second under sustained load. Indicates capacity for high-volume hashing workloads.                                                                                                                                                                                                                                                                                                                                                                           | > 8,000 | 11,400 (sync), 25,400 (parallel) | Exceeds target significantly          |
-| Sign Operations/sec         | Number of certificate signing operations completed per second. More computationally expensive than hashing, varies significantly by algorithm and key size.                                                                                                                                                                                                                                                                                                                                            | > 750   | 1,025 (sync), 6,265 (parallel)   | Exceeds target significantly          |
-| Health Check Operations/sec | Number of health checks completed per second. Useful for high-frequency monitoring and availability validation.                                                                                                                                                                                                                                                                                                                                                                                        | > 8,000 | 12,300 (sync), 27,000 (parallel) | Excellent monitoring capacity         |
-| Parallel Scaling Efficiency | Throughput improvement ratio when switching from synchronous to parallel execution. Indicates effectiveness of concurrent request handling. Note: This metric measures the same parallel execution as "Parallel Performance Gain" in Latency Metrics but from a throughput perspective. Both are needed because they measure different aspects: latency measures per-operation response time improvement (user experience), while throughput measures total operations-per-second capacity improvement (system capacity). Target minimum scaling. | > 2x    | 2.2x (hash), 2.2x (health), 6.1x (sign) | Sign operations benefit most from parallelism |
+| Metric                      | Description                                                              | Target  | Current Performance              | Notes                                         |
+|-----------------------------|--------------------------------------------------------------------------|---------|----------------------------------|-----------------------------------------------|
+| Hash Operations/sec         | Number of hash computations completed per second under sustained load.   | > 8,000 | 11,400 (sync), 25,400 (parallel) | Exceeds target significantly                  |
+| Sign Operations/sec         | Number of certificate signing operations completed per second.           | > 750   | 1,025 (sync), 6,265 (parallel)   | Exceeds target significantly                  |
+| Health Check Operations/sec | Number of health checks completed per second.                            | > 8,000 | 12,300 (sync), 27,000 (parallel) | Excellent monitoring capacity                 |
+| Parallel Scaling Efficiency | Throughput improvement ratio when switching to parallel execution.       | > 2x    | 2.2x (hash), 2.2x (health), 6.1x (sign) | Sign operations benefit most from parallelism |
 
 #### Reliability Metrics
 
 Reliability metrics track system availability, fault tolerance, and recovery capabilities. High reliability ensures cryptographic services remain available even during failures, minimizing application disruption.
 
-| Metric                             | Description                                                                                                                                                                                                                                                                                                                                                                                   | Target  | Current Performance | Notes                                |
-|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|---------------------|--------------------------------------|
-| Server Crash Recovery Time (K8s)   | Time from server container crash to full service restoration in Kubernetes. Includes detection, restart, and socket availability. While K8s controls restart timing, this metric tracks the total application recovery experience. It validates that crypto-broker's design (fast startup, no state persistence requirements) enables rapid recovery within orchestration constraints.       | < 10s   | 2-5s                | Kubernetes restart policy            |
-| Server Crash Recovery Time (CF)    | Time from sidecar process crash to full service restoration in Cloud Foundry. Includes CF health check detection and process restart. This metric validates that crypto-broker's sidecar design integrates properly with CF's health monitoring and that application code handles transient crypto-broker unavailability gracefully (connection retries, circuit breakers).                  | < 15s   | 5-10s               | Cloud Foundry process monitoring     |
-| Request Success Rate               | Percentage of requests that complete successfully without errors. High rate indicates stable operation and proper error handling.                                                                                                                                                                                                                                                             | > 99.9% | Not yet measured    | Requires production telemetry        |
-| Client Connection Success Rate     | Percentage of client connection attempts that successfully establish communication with the server. Measures socket availability and connectivity.                                                                                                                                                                                                                                            | > 99.5% | Not yet measured    | Requires production telemetry        |
+| Metric                             | Description                                                              | Target  | Current Performance | Notes                            |
+|------------------------------------|--------------------------------------------------------------------------|---------|---------------------|----------------------------------|
+| Server Crash Recovery Time (K8s)   | Time from server container crash to full service restoration in K8s.     | < 10s   | 2-5s                | Kubernetes restart policy        |
+| Server Crash Recovery Time (CF)    | Time from sidecar process crash to full service restoration in CF.       | < 15s   | 5-10s               | Cloud Foundry process monitoring |
+| Request Success Rate               | Percentage of requests that complete successfully without errors.        | > 99.9% | Not yet measured    | Requires production telemetry    |
+| Client Connection Success Rate     | Percentage of client connection attempts that successfully establish.    | > 99.5% | Not yet measured    | Requires production telemetry    |
 
 #### Scalability Indicators
 
 Scalability indicators measure resource efficiency and the system's ability to handle increased load through horizontal or vertical scaling. Efficient resource usage enables cost-effective deployment at scale.
 
-| Metric                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                         | Target  | Current State       | Notes                                |
-|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|---------------------|--------------------------------------|
-| Memory per Server Instance | RAM consumed by a single server instance including Go runtime overhead. Low memory footprint enables dense deployment in resource-constrained environments. Target: < 100MB (architectural requirement for sidecar deployment efficiency). Current State: ~50-70MB (estimated from similar Go gRPC services; actual values should be measured via kubectl top pod or cf app).                                                     | < 100MB | ~50-70MB            | To be measured via kubectl/cf CLI    |
-| CPU Utilization (idle)     | CPU percentage used when server is running but processing no requests. Low idle usage indicates efficient resource sharing with application containers. Target: < 5% (ensures minimal impact on application container CPU quota). Current State: ~2-3% (estimated from idle Go process baseline; measure via kubectl top or ps aux).                                                                                             | < 5%    | ~2-3%               | To be measured via kubectl/cf CLI    |
-| CPU Utilization (load)     | CPU percentage used during active request processing. Sustained high utilization may indicate need for horizontal scaling or optimization. Target: < 80% (keeps headroom for burst traffic). Current State: Varies by operation (depends on algorithm complexity and request rate; measure during load testing).                                                                                                                    | < 80%   | Varies by operation | To be measured during benchmarks     |
-| Horizontal Scaling         | Ability to increase capacity by adding more server instances. Linear scaling means doubling instances doubles capacity without diminishing returns. Target: Linear (architectural goal: stateless design with no shared state). Current State: Supported (each pod/sidecar operates independently with no coordination required).                                                                                                 | Linear  | Supported           | Each pod/sidecar is independent      |
+| Metric                     | Description                                                              | Target  | Current State       | Notes                             |
+|----------------------------|--------------------------------------------------------------------------|---------|---------------------|-----------------------------------|
+| Memory per Server Instance | RAM consumed by a single server instance including Go runtime overhead.  | < 100MB | ~50-70MB            | To be measured via kubectl/cf CLI |
+| CPU Utilization (idle)     | CPU percentage used when server is running but processing no requests.   | < 5%    | ~2-3%               | To be measured via kubectl/cf CLI |
+| CPU Utilization (load)     | CPU percentage used during active request processing.                    | < 80%   | Varies by operation | To be measured during benchmarks  |
+| Horizontal Scaling         | Ability to increase capacity by adding more server instances.            | Linear  | Supported           | Each pod/sidecar is independent   |
 
 #### Observability Coverage
 
 Observability metrics track the system's ability to expose internal state and behavior for monitoring, debugging, and performance analysis. Comprehensive observability enables proactive issue detection and rapid troubleshooting.
 
-| Metric                    | Description                                                                                                                                                                         | Target                | Current State | Notes                         |
-|---------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------|---------------|-------------------------------|
-| Trace Coverage            | Percentage of crypto operations instrumented with distributed tracing spans. Complete coverage enables end-to-end request flow analysis and latency attribution.                   | 100% of operations    | 100%          | OpenTelemetry integration     |
-| Structured Logging        | Percentage of log events emitted in machine-parsable format with consistent fields. Enables automated log analysis and alerting.                                                    | 100% of events        | 100%          | JSON/text format              |
-| Health Check Availability | Percentage of time health check endpoint responds correctly. Enables automated monitoring and orchestration platform integration.                                                   | 100%                  | 100%          | gRPC health protocol          |
-| Metrics Export            | Capability to export operational metrics in industry-standard format for monitoring systems. Enables dashboards, alerting, and capacity planning.                                   | Prometheus-compatible | Planned       | Future enhancement            |
+| Metric                    | Description                                                                      | Target                | Current State | Notes                     |
+|---------------------------|----------------------------------------------------------------------------------|---------------------- |---------------|---------------------------|
+| Trace Coverage            | Percentage of crypto operations instrumented with distributed tracing spans.     | 100% of operations    | 100%          | OpenTelemetry integration |
+| Structured Logging        | Percentage of log events emitted in machine-parsable format.                     | 100% of events        | 100%          | JSON/text format          |
+| Health Check Availability | Percentage of time health check endpoint responds correctly.                     | 100%                  | 100%          | gRPC health protocol      |
+| Metrics Export            | Capability to export operational metrics in industry-standard format.            | Prometheus-compatible | Planned       | Future enhancement        |
 
 #### Quality Metrics
 
@@ -1002,11 +1002,11 @@ applications:
 
 - **Pre-compiled Binaries**: Deploy compiled executables, not source code
 - **Reasons**:
-  - Binary can be signed for integrity verification
-  - No dependency resolution at runtime
-  - Faster deployment (no compilation step)
-  - Reproducible builds independent of CF buildpack version
-  - Meets compliance requirements (verified artifacts)
+    - Binary can be signed for integrity verification
+    - No dependency resolution at runtime
+    - Faster deployment (no compilation step)
+    - Reproducible builds independent of CF buildpack version
+    - Meets compliance requirements (verified artifacts)
 
 **Deployment Steps**:
 
@@ -1030,8 +1030,8 @@ applications:
 **Key Components**:
 
 - Pod with multiple containers:
-  - Application container(s) using client library
-  - Crypto Broker Server container
+    - Application container(s) using client library
+    - Crypto Broker Server container
 - Shared volume for Unix socket
 - ConfigMaps for profiles and configuration
 - Optional: Secrets for certificates
@@ -1467,4 +1467,3 @@ The architecture is designed for extensibility, with clear component boundaries 
 **Last Updated**: February 2026  
 **Authors**: Crypto Broker Team  
 **Status**: Living Document
-
