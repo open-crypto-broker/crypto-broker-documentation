@@ -4,7 +4,7 @@
 
 1. [Overview](#overview)
 2. [System Architecture](#system-architecture)
-3. [Component Description](#component-description)
+3. [Repositories Overview](#repositories-overview)
 4. [Communication Architecture](#communication-architecture)
 5. [Performance Evaluation](#performance-evaluation)
 6. [FIPS 140-3 Mode](#fips-140-3-mode)
@@ -49,7 +49,7 @@ The Container diagram reveals the internal structure of the CryptoAgility system
 
 ![Container Diagram](c4/c2-container.md)
 
-### Sequence diagram
+### Sequence Diagram
 
 The Request Flow sequence diagram illustrates both the deployment model and the complete lifecycle of a cryptographic operation request. The diagram shows two separate containers/processes (Client-Container and Server-Container) representing the sidecar deployment pattern.
 
@@ -65,23 +65,7 @@ The Request Flow sequence diagram illustrates both the deployment model and the 
 
 This architecture clearly separates the application/client container from the cryptographic server container, enabling independent deployment, restart, and scaling while maintaining high-performance local communication.
 
-```mermaid
-sequenceDiagram
-    box LightBlue Client-Container
-    participant Application
-    participant Crypto Broker client 
-    end
-    box LightGreen Server-Container
-    participant Crypto Broker server
-    participant Crypto Provider
-    end
-    Application ->> Crypto Broker client: Call crypto-functions
-    Crypto Broker client ->> Crypto Broker server: Send request (IPC via gRPC)
-    Crypto Broker server ->> Crypto Provider: Perform crypto operation
-    Crypto Provider ->> Crypto Broker server: Return result
-    Crypto Broker server ->> Crypto Broker client: Send response (IPC via gRPC)
-    Crypto Broker client ->> Application: Return result
-```
+![Sequence Diagram](sequence.md)
 
 ---
 
