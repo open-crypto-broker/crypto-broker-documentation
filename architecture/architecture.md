@@ -35,15 +35,15 @@ enabling centralized crypto policy management, easy algorithm updates, and compl
 
 ## System Architecture
 
-The Crypto Broker follows the C4 model for architectural documentation. The system consists of multiple repositories, each serving a specific purpose:
+The Crypto Broker follows the [C4 model](https://c4model.com/) for architectural documentation. The system consists of multiple repositories, each serving a specific purpose:
 
-### System Context
+### C1-System Context
 
 The System Context diagram shows the highest-level view of the [Crypto Agility](https://apeirora.eu/content/impact/security-kms/) project. Users interact with the system to perform cryptographic operations. This abstraction hides the internal complexity of how cryptographic services are delivered, focusing on the external boundary of the system.
 
 ![System Context Diagram](c4/c1-system.md)
 
-### Container View
+### C2-Container View
 
 The Container diagram reveals the internal structure of the CryptoAgility system. It shows two primary containers: the Application (which integrates the client library) and the Crypto Broker server. This illustrates the sidecar pattern where both containers run on the same host, with the application using the Crypto Broker to handle all cryptographic operations. Users interact directly with the application, which transparently delegates crypto tasks to the server.
 
