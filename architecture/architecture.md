@@ -479,11 +479,11 @@ Observability metrics track the system's ability to expose internal state and be
 
 Quality metrics assess code correctness, test coverage, and compliance with cryptographic standards. High quality ensures reliable cryptographic operations and regulatory compliance.
 
-| Metric                             | Description                                                                      | Target         | Current State                                                  | Notes                                                                                       |
-|------------------------------------|----------------------------------------------------------------------------------|----------------|----------------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| Test Coverage                      | Percentage of source code lines executed during automated testing.               | > 80%          | Server: ~20-25%<br>Go Client: 76.7%<br>JS Client: ~53%         | Server below target<br>Go client near target<br>JS excluding generated code                 |
-| E2E Test Pass Rate                 | Percentage of end-to-end integration tests passing in CI/CD pipeline.            | 100%           | 100%                                                           | All tests passing                                                                           |
-| Known-Answer Test (KAT) Compliance | Percentage of cryptographic operations validated against NIST test vectors.      | 100%           | Not yet measured                                               | NIST test vector validation                                                                 |
+| Metric                             | Description                                                                      | Target         | Current State                                               | Notes                                                                               |
+|------------------------------------|----------------------------------------------------------------------------------|----------------|-------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| Test Coverage                      | Percentage of source code lines executed during automated testing.               | > 80%          | Server: ~20-25% / Go Client: 76.7% / JS Client: ~53%        | Server below target / Go client near target / JS excluding generated code           |
+| E2E Test Pass Rate                 | Percentage of end-to-end integration tests passing in CI/CD pipeline.            | 100%           | 100%                                                        | All tests passing                                                                   |
+| Known-Answer Test (KAT) Compliance | Percentage of cryptographic operations validated against NIST test vectors.      | 100%           | Not yet measured                                            | NIST test vector validation                                                         |
 
 **Notes on KPI Measurement**:
 
