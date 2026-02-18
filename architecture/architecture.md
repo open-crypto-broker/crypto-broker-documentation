@@ -1051,6 +1051,7 @@ The Crypto Broker's security architecture follows a security-by-design approach,
 Operators must configure the following security controls:
 
 **Unix Socket File Permissions** (mandatory):
+
 ```bash
 chmod 600 /tmp/cryptobroker.sock
 ```
