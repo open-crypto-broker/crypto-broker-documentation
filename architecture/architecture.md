@@ -83,14 +83,13 @@ The Crypto Broker Server is the core component that:
 - Returns results or error notifications to clients
 - Supports multiple cryptographic profiles for different compliance requirements
 
-**Key Capabilities** (current, with ongoing expansion):
+**Key Capabilities**:
 
-- **Hash Operations**: SHA-2, SHA-3 family algorithms (additional algorithms planned)
+- **Hash Operations**: SHA-2, SHA-3 family algorithms
 - **Certificate Signing**: Generate X.509 certificates from CSRs
 - **Health Checks**: gRPC health check protocol support
 - **Benchmarking**: Built-in performance testing capabilities
 - **OpenTelemetry**: Distributed tracing for observability
-- **Future Operations**: Encryption/decryption, key derivation, MAC operations, and more in development
 
 **Configuration**:
 
@@ -114,15 +113,13 @@ The Crypto Broker Clients are librariies that provide a simple, consistent API a
 
 - **Go Client**: Native Go library for Go applications
 - **JavaScript/Node.js Client**: TypeScript-based library for Node.js applications
-- **Future**: Additional language support planned
 
-**API Operations** (currently available, expanding):
+**API Operations**:
 
 - `HealthCheck()`: Server health status
 - `HashData()`: Compute cryptographic hashes
 - `SignCertificate()`: Generate signed X.509 certificates
 - `BenchmarkData()`: Run performance benchmarks
-- Additional operations for encryption, key derivation, and MAC are under development
 
 ### 3. Crypto Broker CLI
 
@@ -153,14 +150,13 @@ Provides deployment configurations and end-to-end tests for:
 - **Docker**: Docker Compose configurations for local testing
 - **E2E Testing**: Comprehensive test suite validating all components
 
-**Testing Capabilities** (current suite, continuously expanding):
+**Testing Capabilities**:
 
 - Health check tests
 - Hashing and signing operation tests
 - Benchmark tests
 - Client compatibility matrix generation
 - Cross-platform builds (multiple OS/architecture combinations)
-- Additional test scenarios for upcoming crypto operations in development
 
 ### 5. Crypto Broker Documentation
 
@@ -456,8 +452,8 @@ Latency metrics measure the time delay for cryptographic operations, critical fo
 | Hash Operation Latency    | Time to compute a hash of arbitrary data using SHA-2/SHA-3 algorithms.   | < 125μs | 87μs (sync), 39μs (parallel)        | Below target in both modes   |
 | Sign Operation Latency    | Time to generate an X.509 certificate from a CSR.                        | < 1.4ms | 975μs (sync), 160μs (parallel)      | Well below target            |
 | Health Check Latency      | Time to query server health status.                                      | < 125μs | 81μs (sync), 37μs (parallel)        | Minimal overhead             |
-| Parallel Performance Gain | Performance improvement when executing operations concurrently.          | > 2x    | 2.2x (hash), 2.2x (health), 6.1x    | Excellent concurrent scaling |
-| Memory per Operation      | RAM allocated per cryptographic operation.                               | < 35KB  | 9KB (hash), 8KB (health), 20KB      | Lightweight memory footprint |
+| Parallel Performance Gain | Performance improvement when executing operations concurrently.          | > 2x    | 2.2x (hash), 2.2x (health), 6.1x (sign) | Excellent concurrent scaling |
+| Memory per Operation      | RAM allocated per cryptographic operation.                               | < 35KB  | 9KB (hash), 8KB (health), 20KB (sign) | Lightweight memory footprint |
 
 #### Throughput Metrics
 
@@ -468,29 +464,7 @@ Throughput metrics measure the volume of cryptographic operations the server can
 | Hash Operations/sec         | Number of hash computations completed per second under sustained load.   | > 8,000 | 11,400 (sync), 25,400 (parallel) | Exceeds target significantly                  |
 | Sign Operations/sec         | Number of certificate signing operations completed per second.           | > 750   | 1,025 (sync), 6,265 (parallel)   | Exceeds target significantly                  |
 | Health Check Operations/sec | Number of health checks completed per second.                            | > 8,000 | 12,300 (sync), 27,000 (parallel) | Excellent monitoring capacity                 |
-| Parallel Scaling Efficiency | Throughput improvement ratio when switching to parallel execution.       | > 2x    | 2.2x (hash), 2.2x (health), 6.1x | Sign operations benefit most from parallelism |
-
-#### Reliability Metrics
-
-Reliability metrics track system availability, fault tolerance, and recovery capabilities. High reliability ensures cryptographic services remain available even during failures, minimizing application disruption.
-
-| Metric                             | Description                                                              | Target  | Current Performance | Notes                            |
-|------------------------------------|--------------------------------------------------------------------------|---------|---------------------|----------------------------------|
-| Server Crash Recovery Time (K8s)   | Time from server container crash to full service restoration in K8s.     | < 10s   | 2-5s                | Kubernetes restart policy        |
-| Server Crash Recovery Time (CF)    | Time from sidecar process crash to full service restoration in CF.       | < 15s   | 5-10s               | Cloud Foundry process monitoring |
-| Request Success Rate               | Percentage of requests that complete successfully without errors.        | > 99.9% | Not yet measured    | Requires production telemetry    |
-| Client Connection Success Rate     | Percentage of client connection attempts that successfully establish.    | > 99.5% | Not yet measured    | Requires production telemetry    |
-
-#### Scalability Indicators
-
-Scalability indicators measure resource efficiency and the system's ability to handle increased load through horizontal or vertical scaling. Efficient resource usage enables cost-effective deployment at scale.
-
-| Metric                     | Description                                                              | Target  | Current State       | Notes                             |
-|----------------------------|--------------------------------------------------------------------------|---------|---------------------|-----------------------------------|
-| Memory per Server Instance | RAM consumed by a single server instance including Go runtime overhead.  | < 100MB | ~50-70MB            | To be measured via kubectl/cf CLI |
-| CPU Utilization (idle)     | CPU percentage used when server is running but processing no requests.   | < 5%    | ~2-3%               | To be measured via kubectl/cf CLI |
-| CPU Utilization (load)     | CPU percentage used during active request processing.                    | < 80%   | Varies by operation | To be measured during benchmarks  |
-| Horizontal Scaling         | Ability to increase capacity by adding more server instances.            | Linear  | Supported           | Each pod/sidecar is independent   |
+| Parallel Scaling Efficiency | Throughput improvement ratio when switching to parallel execution.       | > 2x    | 2.2x (hash), 2.2x (health), 6.1x (sign) | Sign operations benefit most from parallelism |
 
 #### Observability Coverage
 
@@ -500,8 +474,6 @@ Observability metrics track the system's ability to expose internal state and be
 |---------------------------|----------------------------------------------------------------------------------|---------------------- |---------------|---------------------------|
 | Trace Coverage            | Percentage of crypto operations instrumented with distributed tracing spans.     | 100% of operations    | 100%          | OpenTelemetry integration |
 | Structured Logging        | Percentage of log events emitted in machine-parsable format.                     | 100% of events        | 100%          | JSON/text format          |
-| Health Check Availability | Percentage of time health check endpoint responds correctly.                     | 100%                  | 100%          | gRPC health protocol      |
-| Metrics Export            | Capability to export operational metrics in industry-standard format.            | Prometheus-compatible | Planned       | Future enhancement        |
 
 #### Quality Metrics
 
@@ -509,10 +481,9 @@ Quality metrics assess code correctness, test coverage, and compliance with cryp
 
 | Metric                             | Description                                                                      | Target         | Current State    | Notes                       |
 |------------------------------------|----------------------------------------------------------------------------------|----------------|------------------|-----------------------------|
-| Test Coverage                      | Percentage of source code lines executed during automated testing.               | > 80%          | Not yet measured | Unit and integration tests  |
+| Test Coverage                      | Percentage of source code lines executed during automated testing.               | > 80%          | Server: ~20-25% / Go Client: 76.7% / JS Client: ~53% | Server below target / Go client near target / JS excluding generated code |
 | E2E Test Pass Rate                 | Percentage of end-to-end integration tests passing in CI/CD pipeline.            | 100%           | 100%             | All tests passing           |
-| Known-Answer Test (KAT) Compliance | Percentage of cryptographic operations producing correct results against NIST.   | 100%           | 100%             | Validated against standards |
-| FIPS Validation Status             | Official CMVP certification status of the cryptographic module.                  | CMVP certified | Pending review   | Module v1.0.0 in process    |
+| Known-Answer Test (KAT) Compliance | Percentage of cryptographic operations validated against NIST test vectors.      | 100%           | Not yet measured | NIST test vector validation |
 
 **Notes on KPI Measurement**:
 
@@ -562,7 +533,6 @@ Quality metrics assess code correctness, test coverage, and compliance with cryp
    - Real-world performance may vary based on:
      - Hardware specifications (CPU, memory, disk I/O)
      - Concurrent load patterns
-     - Network conditions (for non-local deployments)
      - Operating system and kernel configuration
 
 5. **Continuous Improvement**:
@@ -572,28 +542,12 @@ Quality metrics assess code correctness, test coverage, and compliance with cryp
    - Target values adjusted based on production feedback and requirements
    - Targets should be recalculated when deploying to significantly different hardware platforms
 
-6. **Scalability Indicator Measurement**:
-   - **Target Values Source**: Targets are architectural requirements based on:
-     - Sidecar deployment constraints (memory must fit in shared pod resources)
-     - Operational efficiency goals (idle CPU should not starve application)
-     - Industry best practices for microservice resource consumption
-   - **Current State Values Source**: Current estimates are based on:
-     - Similar Go gRPC server benchmarks and profiling data
-     - Theoretical calculations from Go runtime overhead
-     - **These are estimates and should be replaced with actual measurements**
-   - **How to Measure Actual Values**:
-     - Use `crypto-broker-deployment/scripts/collect-metrics.sh` for automated collection
-     - See `crypto-broker-deployment/docs/METRICS-COLLECTION-GUIDE.md` for detailed instructions
-     - Kubernetes: `kubectl top pod -n crypto-broker` (requires metrics-server)
-     - Cloud Foundry: `cf app <app-name>` and `cf ssh <app-name> -c "ps aux"`
-     - Collect metrics after 30-60 seconds of idle state for baseline measurements
-     - Run benchmarks while monitoring CPU to measure under-load values
-
-7. **Metric Gaps**:
-   - Request Success Rate: Requires production telemetry data
-   - Client Connection Success Rate: Requires production telemetry data
-   - Test Coverage: Code coverage tooling to be integrated
-   - These metrics will be populated as production deployments mature
+6. **Test Coverage Measurement**:
+   - **Server**: Measured via `go test -cover` (~20-25%)
+   - **Go Client**: Measured via `go test -cover` (76.7%)
+   - **JS Client**: Measured via `npx jest --coverage` (~53%)
+   - Target is >80% across all components
+   - **Known-Answer Test (KAT) Compliance**: NIST test vector validation to be implemented
 
 ---
 
@@ -701,8 +655,6 @@ go version -m bin/cryptobroker-server
 2. **Certificate Signing**: FIPS mode has **negligible overhead** (<2%) for signing operations
    - P-256 signing: +1.6% overhead (~2 μs)
    - P-521 operations: <0.2% difference (within measurement noise)
-   - **Significant improvement over historical data**: Earlier FIPS v1.0.0 measurements on x86_64 showed 3-4x overhead
-   - ARM64 architecture shows excellent FIPS performance
 
 3. **End-to-End Performance**: No measurable FIPS impact in real-world scenarios
    - Differences are within ±6%, which is normal measurement variance for IPC operations
@@ -720,27 +672,14 @@ go version -m bin/cryptobroker-server
    - One-time cost at server initialization
    - Negligible impact on overall service availability
 
-#### Performance Analysis
-
-The measured FIPS overhead is **essentially zero** for practical purposes. This outstanding result on Apple Silicon ARM64 contradicts historical reports of 3-4x overhead with FIPS v1.0.0, which were likely measured on x86_64 platforms. Key factors:
-
-1. **ARM64 Optimization**: Go Cryptographic Module v1.0.0 appears highly optimized for Apple Silicon
-2. **Hardware Crypto Acceleration**: Apple M2 Pro's crypto acceleration benefits both FIPS and non-FIPS implementations similarly
-3. **Compiler Improvements**: Go 1.25.5 compiler optimizations for ARM64 architecture
-4. **Platform-Specific Performance**: FIPS overhead varies significantly by CPU architecture
-
-**Historical Context**: Earlier FIPS v1.0.0 measurements on Intel/AMD x86_64 platforms showed 3-4x overhead for signing operations. The current measurements demonstrate that **FIPS performance is highly platform-dependent**, with ARM64 showing dramatically better results.
-
 #### Deployment Recommendation
 
-**Enable FIPS mode by default** for ARM64 deployments (Apple Silicon, AWS Graviton, Azure Cobalt). The performance impact is negligible (<2%) while providing:
+**Enable FIPS mode by default**. The performance impact is negligible (<2%) while providing:
 
 - CMVP-validated cryptographic operations
 - Regulatory compliance (FedRAMP, FIPS 140-3 requirements)
 - Additional integrity checks and known-answer tests
 - Improved memory efficiency
-
-**Note for x86_64 Deployments**: Organizations deploying on Intel/AMD x86_64 platforms should benchmark FIPS performance on their target hardware, as historical data suggests potential 3-4x overhead. ARM64 platforms show excellent FIPS performance with v1.0.0.
 
 ### FIPS Mode Features
 
@@ -749,7 +688,7 @@ When FIPS mode is enabled:
 - **DRBG with Kernel Entropy**: Uses NIST-compliant DRBG seeded with kernel entropy
 - **Approved Algorithms Only**: TLS and crypto operations restricted to FIPS-approved algorithms
 - **Integrity Self-Checks**: Module integrity verification on startup
-- **Known-Answer Tests**: Validates crypto implementations against known results
+- **Known-Answer Tests**: FIPS module runs internal KATs at startup to validate core crypto primitives
 - **Runtime Verification**: `crypto/fips140.Enabled()` function confirms mode is active
 
 ---
@@ -793,19 +732,17 @@ applications:
 
 - **Pre-compiled Binaries**: Deploy compiled executables, not source code
 - **Reasons**:
-    - Binary can be signed for integrity verification
-    - No dependency resolution at runtime
-    - Faster deployment (no compilation step)
-    - Reproducible builds independent of CF buildpack version
-    - Meets compliance requirements (verified artifacts)
+  - Binary can be signed for integrity verification
+  - No dependency resolution at runtime
+  - Faster deployment (no compilation step)
+  - Reproducible builds independent of CF buildpack version
+  - Meets compliance requirements (verified artifacts)
 
-**Deployment Steps**:
+1. Download pre-compiled server binary from releases
+2. Configure profiles and manifest files
+3. Deploy using Cloud Foundry CLI
 
-1. Download pre-compiled server binary from [Releases](https://github.com/open-crypto-broker/crypto-broker-server/releases)
-2. Select appropriate architecture (default CF is `amd64`)
-3. Create `Profiles.yaml` configuration file
-4. Create CF manifest with sidecar configuration
-5. Deploy: `cf push`
+Refer to the deployment repository for platform-specific examples and current command syntax.
 
 **Cloud Foundry Specifics**:
 
@@ -821,8 +758,8 @@ applications:
 **Key Components**:
 
 - Pod with multiple containers:
-    - Application container(s) using client library
-    - Crypto Broker Server container
+  - Application container(s) using client library
+  - Crypto Broker Server container
 - Shared volume for Unix socket
 - ConfigMaps for profiles and configuration
 - Optional: Secrets for certificates
@@ -862,41 +799,15 @@ volumeMounts:
 
 **Deployment Process**:
 
-1. **Build Docker Images** (local testing):
+For detailed deployment instructions and up-to-date commands, see the [crypto-broker-deployment README](https://github.com/open-crypto-broker/crypto-broker-deployment). The general workflow includes:
 
-   ```bash
-   task docker-compose-build
-   ```
+1. **Prepare Environment**: Build or pull container images
+2. **Configure Helm Values**: Customize deployment parameters in `values.yaml`
+3. **Deploy**: Install Helm chart to Kubernetes cluster
+4. **Verify**: Check pod status and logs
+5. **Manage**: Update, scale, or uninstall as needed
 
-2. **Load into Minikube** (local K8s):
-
-   ```bash
-   minikube start
-   task minikube-images
-   ```
-
-3. **Deploy Helm Chart**:
-
-   ```bash
-   task kube-deploy
-   # Or directly:
-   helm install broker-release deployments/k8s/kube-broker -n crypto-broker --create-namespace
-   ```
-
-4. **Verify Deployment**:
-
-   ```bash
-   kubectl get pods -n crypto-broker
-   kubectl logs <pod-name> -c server-app -n crypto-broker
-   ```
-
-5. **Uninstall**:
-
-   ```bash
-   task kube-destroy
-   # Or:
-   helm uninstall broker-release -n crypto-broker
-   ```
+Refer to the deployment repository for specific commands, examples for different Kubernetes distributions (minikube, EKS, AKS, GKE), and troubleshooting guidance.
 
 **Kubernetes Features**:
 
@@ -908,12 +819,7 @@ volumeMounts:
 
 ### Docker Compose (Local Development)
 
-For local development and testing:
-
-```bash
-task docker-compose-build   # Build images
-task docker-compose-deploy  # Start services
-```
+For local development and testing, Docker Compose provides a quick way to run multi-container setups. See the [crypto-broker-deployment README](https://github.com/open-crypto-broker/crypto-broker-deployment) for current setup instructions and commands.
 
 Docker Compose provides:
 
@@ -1048,20 +954,6 @@ Docker Compose provides:
    # Check restart counts and logs
    ```
 
-**Liveness Probes** (Optional Enhancement):
-
-While not currently configured, liveness probes can be added for more robust health checking:
-
-```yaml
-livenessProbe:
-  exec:
-    command:
-    - /bin/grpc_health_probe
-    - -addr=unix:///tmp/cryptobroker.sock
-  initialDelaySeconds: 5
-  periodSeconds: 10
-```
-
 ### Client Resilience
 
 **Client Library Features**:
@@ -1124,89 +1016,54 @@ livenessProbe:
 
 ## Security Considerations
 
-### Access Control
+The Crypto Broker's security architecture follows a security-by-design approach, embedding security controls at the architectural level rather than relying solely on operational measures. This section describes the built-in security properties and the essential deployment requirements for operators.
+
+### Security-by-Design Principles
+
+#### Access Control
 
 - **Unix Socket Permissions**: File system permissions control access
 - **Local-Only**: Server only listens on Unix socket (no network exposure)
 - **Sidecar Pattern**: Isolates crypto operations from application process
 
-### Cryptographic Material
+#### Cryptographic Material
 
 - **Private Keys**: Passed in request payloads (not stored by server)
 - **Certificates**: Transient (exist only during request processing)
 - **No Persistence**: Server does not store any cryptographic material
 - **Memory Safety**: Go's memory management reduces leak risks
 
-### Profile Configuration
+#### Profile Configuration
 
 - **YAML-Based**: Human-readable, version-controllable
 - **Validation**: Server validates profile structure on startup
 - **Least Privilege**: Profiles define allowed algorithms, preventing unauthorized operations
 
-### Compliance
+#### Compliance
 
 - **FIPS 140-3**: Build-time enforcement of validated crypto module
 - **Algorithm Restrictions**: Profile-based control of approved algorithms
 - **Audit Trail**: OpenTelemetry traces provide request audit logs
-- **Reproducible Builds**: Pre-compiled, signed binaries for integrity
+- **Reproducible Builds**: Pre-compiled binaries
 
----
+### Deployment Security Requirements
 
-## Future Enhancements
+Operators must configure the following security controls:
 
-### Planned Features
+**Unix Socket File Permissions** (mandatory):
+```bash
+chmod 600 /tmp/cryptobroker.sock
+```
 
-1. **Additional Language Support**:
-   - Python client library
-   - Java client library
-   - Rust client library
+**Profile Configuration Protection** (mandatory):
 
-2. **Extended Operations**:
-   - Encryption/Decryption APIs
-   - Key derivation functions
-   - MAC (Message Authentication Code) operations
+- Store profile YAML files with restrictive permissions (chmod 640 minimum)
+- Validate profile changes in non-production environments before deployment
 
-3. **Advanced Observability**:
-   - Prometheus metrics export
-   - Grafana dashboards
-   - Custom health check endpoints
+**Key Management** (application responsibility):
 
-4. **Enhanced Resilience**:
-
-   **Circuit Breaker Patterns**:
-   - Implement circuit breaker pattern in client libraries to prevent cascading failures
-   - Three states: Closed (normal operation), Open (failing fast), Half-Open (testing recovery)
-   - Automatically stop sending requests when server is unreachable, reducing resource waste
-   - Configurable thresholds: failure rate, failure count, timeout duration
-   - Benefits: Faster failure detection, reduced load on failing servers, graceful degradation
-
-   **Advanced Retry Policies with Jitter**:
-   - Exponential backoff with randomized jitter to prevent thundering herd problem
-   - Multiple retry strategies: fixed delay, exponential backoff, adaptive retry
-   - Configurable per operation type (different strategies for hash vs sign operations)
-   - Maximum retry limits and timeout budgets to prevent infinite loops
-   - Context-aware retries: distinguish transient errors (network) from permanent errors (invalid input)
-   - Benefits: Better resource utilization, reduced server load during recovery, improved success rates
-
-   **Connection Pooling Optimizations**:
-   - Maintain pool of reusable gRPC connections to reduce connection overhead
-   - Automatic connection health checks and pruning of stale connections
-   - Load balancing across multiple connections for improved throughput
-   - Configurable pool size based on application workload patterns
-   - Connection warm-up strategies to prevent cold-start latency
-   - Benefits: Lower latency for high-frequency operations, reduced CPU overhead from connection establishment
-
-   **Additional Resilience Features**:
-   - Request hedging: Send duplicate requests after timeout threshold, use first response
-   - Bulkhead isolation: Separate resource pools for different operation types
-   - Graceful degradation: Fallback strategies when server is unavailable
-   - Request prioritization: Critical operations get priority during overload
-   - Adaptive timeouts: Dynamically adjust timeouts based on observed latency patterns
-
-5. **Configuration Management**:
-   - Dynamic profile reloading (without restart)
-   - Profile versioning and migration
-   - Centralized configuration management
+- Applications must securely manage CA private keys used for signing operations
+- Implement key rotation policies aligned with organizational security requirements
 
 ---
 
@@ -1256,5 +1113,5 @@ The architecture is designed for extensibility, with clear component boundaries 
 
 **Document Version**: 1.0  
 **Last Updated**: February 2026  
-**Authors**: Crypto Broker Team  
+**Authors**: Crypto Broker Team (documentation assisted by GitHub Copilot using Claude Sonnet 4.5)  
 **Status**: Living Document
