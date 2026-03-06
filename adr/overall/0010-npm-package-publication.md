@@ -31,10 +31,14 @@ The aim of this ADR is to discuss how we want to publish the ts client library, 
 
 ## Decision Outcome
 
-Chosen option: 2 (Publish on GitHub Packages)
+~~Chosen option: 2 (Publish on GitHub Packages)~~
 
 There is currently no requirement from stakeholders to publish the npm package to npmjs.org.
 To keep maintenance and management efforts a minimum, option 2 is preferred and will be implemented.
+
+### UPDATE (02.03.2026)
+
+_The github npm registry requires authentication. Using only the github repository as the main source for the package with the current deployment setups make complex adjustments necessary (e.g. passing authentication tokens). ***The chosen option will therefore be updated to 1, publishing the npm package on npmjs.org.*** This will make the current deployment and CLI setup easier and only needs minor adjustments in the respective repositories._
 
 ### Consequences
 
@@ -90,3 +94,4 @@ Confirmed by Anselme Tueno and Stephan Andre on 10.02.2026.
 ## More Information
 
 Update: Downtimes are a standard risk and not further a decision driver.
+
