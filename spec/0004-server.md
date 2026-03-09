@@ -90,7 +90,7 @@ The `CryptoBrokerServer` struct represents the core server object handling crypt
 ### `CryptoBrokerServer`
 
 | Field | Type | Description |
-| --- | --- |--- |
+| --- | --- | --- |
 | logger | `*log.Logger` | Logger used for server-side logging. |
 | - | `protobuf.CryptoBrokerServer` | Server API for the gRPC Crypto Broker service. |
 | cryptographicEngineNative | `*c10y.LibraryNative` | A reference to the Go native crypto engine implementation. |
@@ -123,7 +123,6 @@ This API function loads the profile specified in `req.Profile`, uses the algorit
 | Name | Type | Description |
 | --- | --- | --- |
 | `ctx` | `*context.Context` | Request context (used for timeouts, etc.). |
-| `ctx` | `*context.Context` | Request context (used for timeouts, etc.). |
 | `req` | `*protobuf.HashRequest` | Input message containing the profile name and data to hash. |
 
 #### Output
@@ -142,8 +141,6 @@ This API function loads the profile specified in `req.Profile`, parses and valid
 | --- | --- | --- |
 | `ctx` | `*context.Context` | Request context (used for timeouts, etc.). |
 | `req` | `*protobuf.SignRequest` | Contains the CSR, CA certificate, signing key, and profile name. |
-| `ctx` | `*context.Context` | Request context (used for timeouts, etc.). |
-| `req` | `*protobuf.SignRequest` | Contains the CSR, CA certificate, signing key, and profile name. |
 
 #### Output
 
@@ -159,7 +156,6 @@ This is an internal helper function. It computes a hash of the given data using 
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `data` | `[]byte` | Data to be hashed. |
 | `data` | `[]byte` | Data to be hashed. |
 | `p` | `profile.Profile` | The selected cryptographic profile. |
 
@@ -190,7 +186,6 @@ This is an internal helper function. It computes a hash of the given data using 
 
 | Name | Type | Description |
 | --- | --- | --- |
-| `clientInput` | `signClientInput` | Struct containing PEM-encoded CSR, CA certificate, and CA private key. |
 | `clientInput` | `signClientInput` | Struct containing PEM-encoded CSR, CA certificate, and CA private key. |
 | `p` | `profile.Profile` | The selected cryptographic profile. |
 
