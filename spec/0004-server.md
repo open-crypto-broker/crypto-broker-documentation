@@ -15,7 +15,7 @@ The server does not expose cryptographic functionality directly, instead it vali
 ## Transport and Connection
 
 - The server listens for gRPC requests over a Unix domain socket.
-- The socket path is `/tmp/cryptobroker.sock`
+- The socket path is `/tmp/open-crypto-broker/crypto-broker-server.sock`
 
 The server expects connections from clients using a compatible language-specific Crypto Broker library.
 All incoming requests are validated, logged, and processed in accordance with the security policies defined in the provided profiles.
@@ -49,7 +49,7 @@ The server performs the following steps:
 
 1. Initializes the dependency container (logger, server logic, profile loading).
 1. Ensures the socket directory exists (`/tmp`).
-1. Opens a Unix socket at `/tmp/cryptobroker.sock`.
+1. Opens a Unix socket at `/tmp/open-crypto-broker/crypto-broker-server.sock`.
 1. Starts a gRPC server and registers the Crypto Broker service.
 1. Waits for system signals `SIGTERM` to gracefully shut down.
 1. Cleans up the Unix socket file after shutdown.
@@ -59,7 +59,7 @@ The server performs the following steps:
 | Name            | Type   | Description |
 |---------------------|--------|-------------|
 | `baseDir`           | `string` | Base directory for socket file: `/tmp`. |
-| `defaultSocketPath` | `string` | Full path of the Unix socket file: `/tmp/cryptobroker.sock`. |
+| `defaultSocketPath` | `string` | Full path of the Unix socket file: `/tmp/open-crypto-broker/crypto-broker-server.sock`. |
 | `defaultProfiles`   | `string` | Name of the YAML file containing profile definitions: `Profiles.yaml`. |
 
 ---
@@ -735,7 +735,7 @@ A complete list of defined Protobuf messages as well as their structure and cont
 
     - Server loads profiles from `Profiles.yaml`
     - Dependency injection container initializes logger and cryptographic engine
-    - gRPC server is started, listening on a Unix socket on `/tmp/cryptobroker.sock`.
+    - gRPC server is started, listening on a Unix socket on `/tmp/open-crypto-broker/crypto-broker-server.sock`.
 
 1. Requests
 

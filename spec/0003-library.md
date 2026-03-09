@@ -14,7 +14,7 @@ This specification describes the behavior and message formats of the API endpoin
 ## Transport and Connection
 
 - The communication uses gRPC over Unix domain sockets.
-- The socket path is `/tmp/cryptobroker.sock`
+- The socket path is `/tmp/open-crypto-broker/crypto-broker-server.sock`
 - The library is initialized by an instance of the provided language-specific library. Then, the APIs listed below can be called, which use the established unix socket connection to communicate with the server.
 
 ---
