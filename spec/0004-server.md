@@ -15,7 +15,7 @@ The server does not expose cryptographic functionality directly, instead it vali
 ## Transport and Connection
 
 - The server listens for gRPC requests over a Unix domain socket.
-- The socket path is `/tmp/cryptobroker.sock`
+- The socket path is `/tmp/open-crypto-broker/crypto-broker-server.sock`
 
 The server expects connections from clients using a compatible language-specific Crypto Broker library.
 All incoming requests are validated, logged, and processed in accordance with the security policies defined in the provided profiles.
@@ -49,18 +49,18 @@ The server performs the following steps:
 
 1. Initializes the dependency container (logger, server logic, profile loading).
 1. Ensures the socket directory exists (`/tmp`).
-1. Opens a Unix socket at `/tmp/cryptobroker.sock`.
+1. Opens a Unix socket at `/tmp/open-crypto-broker/crypto-broker-server.sock`.
 1. Starts a gRPC server and registers the Crypto Broker service.
 1. Waits for system signals `SIGTERM` to gracefully shut down.
 1. Cleans up the Unix socket file after shutdown.
 
 ### Constants and Configurations
 
-| Name            | Type   | Description |
-|---------------------|--------|-------------|
-| `baseDir`           | `string` | Base directory for socket file: `/tmp`. |
-| `defaultSocketPath` | `string` | Full path of the Unix socket file: `/tmp/cryptobroker.sock`. |
-| `defaultProfiles`   | `string` | Name of the YAML file containing profile definitions: `Profiles.yaml`. |
+| Name | Type | Description |
+| --- | --- | --- |
+| `baseDir` | `string` | Base directory for socket file: `/tmp`. |
+| `defaultSocketPath` | `string` | Full path of the Unix socket file: `/tmp/open-crypto-broker/crypto-broker-server.sock`. |
+| `defaultProfiles` | `string` | Name of the YAML file containing profile definitions: `Profiles.yaml`. |
 
 ---
 
@@ -78,7 +78,7 @@ This package also orchestrates profile retrieval and input validation, i.e., par
 The `api` package depends on the following internal packages:
 
 | Package | Purpose |
-|--------|---------|
+| --- | --- |
 | `c10y` | Interface to the cryptographic backend libraries (e.g., hashing, signing, validation). |
 | `profile` | Loads and validates the profiles. |
 | `protobuf` | Contains the gRPC service definitions and message types. |
@@ -89,11 +89,11 @@ The `CryptoBrokerServer` struct represents the core server object handling crypt
 
 ### `CryptoBrokerServer`
 
-| Field | Type   | Description |
-|----------|--------|-------------|
-| logger   | `*log.Logger`  | Logger used for server-side logging. |
-| -   | `protobuf.CryptoBrokerServer`  | Server API for the gRPC Crypto Broker service. |
-| cryptographicEngineNative | `*c10y.LibraryNative`  | A reference to the Go native crypto engine implementation. |
+| Field | Type | Description |
+| --- | --- | --- |
+| logger | `*log.Logger` | Logger used for server-side logging. |
+| - | `protobuf.CryptoBrokerServer` | Server API for the gRPC Crypto Broker service. |
+| cryptographicEngineNative | `*c10y.LibraryNative` | A reference to the Go native crypto engine implementation. |
 
 ### `NewCryptoBrokerServer`
 
@@ -101,16 +101,16 @@ This is the constructor for the `CryptoBrokerServer` struct.
 
 #### Input Parameters
 
-| Name    | Type   | Description |
-|-------------|--------|-------------|
+| Name | Type | Description |
+| --- | --- | --- |
 | `c10yNative` | `*c10y.LibraryNative` | A reference to the Go native crypto engine implementation. |
 | `logger` | `*log.Logger` | Logger used for server-side logging. |
 
 #### Output
 
-| Type   | Description |
-|--------|-------------|
-| `*CryptoBrokerServer`  | An instance of the Crypto Broker server. |
+| Type | Description |
+| --- | --- |
+| `*CryptoBrokerServer` | An instance of the Crypto Broker server. |
 
 ### Methods
 
@@ -120,16 +120,16 @@ This API function loads the profile specified in `req.Profile`, uses the algorit
 
 #### Input Parameters
 
-| Name    | Type   | Description |
-|-------------|--------|-------------|
-| `ctx` | `*context.Context`  | Request context (used for timeouts, etc.). |
-| `req` | `*protobuf.HashRequest`  | Input message containing the profile name and data to hash. |
+| Name | Type | Description |
+| --- | --- | --- |
+| `ctx` | `*context.Context` | Request context (used for timeouts, etc.). |
+| `req` | `*protobuf.HashRequest` | Input message containing the profile name and data to hash. |
 
 #### Output
 
-| Type   | Description |
-|--------|-------------|
-| `*protobuf.HashResponse`  | Hash output packed into a struct containing the hash value and the hash algorithm. |
+| Type | Description |
+| --- | --- |
+| `*protobuf.HashResponse` | Hash output packed into a struct containing the hash value and the hash algorithm. |
 
 ### `Sign`
 
@@ -137,16 +137,16 @@ This API function loads the profile specified in `req.Profile`, parses and valid
 
 #### Input Parameters
 
-| Name    | Type   | Description |
-|-------------|--------|-------------|
-| `ctx` | `*context.Context`  | Request context (used for timeouts, etc.). |
-| `req` | `*protobuf.SignRequest`  | Contains the CSR, CA certificate, signing key, and profile name. |
+| Name | Type | Description |
+| --- | --- | --- |
+| `ctx` | `*context.Context` | Request context (used for timeouts, etc.). |
+| `req` | `*protobuf.SignRequest` | Contains the CSR, CA certificate, signing key, and profile name. |
 
 #### Output
 
-| Type   | Description |
-|--------|-------------|
-| `*protobuf.SignResponse`  | Signed certificate packed into a struct. |
+| Type | Description |
+| --- | --- |
+| `*protobuf.SignResponse` | Signed certificate packed into a struct. |
 
 ### `hash`
 
@@ -154,17 +154,17 @@ This is an internal helper function. It computes a hash of the given data using 
 
 #### Input Parameters
 
-| Name    | Type   | Description |
-|-------------|--------|-------------|
-| `data` | `[]byte`  | Data to be hashed. |
-| `p` | `profile.Profile`  | The selected cryptographic profile. |
+| Name | Type | Description |
+| --- | --- | --- |
+| `data` | `[]byte` | Data to be hashed. |
+| `p` | `profile.Profile` | The selected cryptographic profile. |
 
 #### Output
 
-| Type   | Description |
-|--------|-------------|
-| `c10y.Hash`  | Computed hash. |
-| `error`  | Error string if the operation fails. |
+| Type | Description |
+| --- | --- |
+| `c10y.Hash` | Computed hash. |
+| `error` | Error string if the operation fails. |
 
 #### Supported Hash Algorithms
 
@@ -184,17 +184,17 @@ This is an internal helper function. It computes a hash of the given data using 
 
 #### Input Parameters
 
-| Name    | Type   | Description |
-|-------------|--------|-------------|
-| `clientInput` | `signClientInput`  | Struct containing PEM-encoded CSR, CA certificate, and CA private key. |
-| `p` | `profile.Profile`  | The selected cryptographic profile. |
+| Name | Type | Description |
+| --- | --- | --- |
+| `clientInput` | `signClientInput` | Struct containing PEM-encoded CSR, CA certificate, and CA private key. |
+| `p` | `profile.Profile` | The selected cryptographic profile. |
 
 #### Output
 
-| Type   | Description |
-|--------|-------------|
-| `[]byte`  | Signed certificate. |
-| `error`  | Error string if the operation fails. |
+| Type | Description |
+| --- | --- |
+| `[]byte` | Signed certificate. |
+| `error` | Error string if the operation fails. |
 
 ---
 
@@ -219,7 +219,7 @@ Signature algorithm identifiers are `rsa` and `ecdsa`.
 The `c10y` package depends on the following packages:
 
 | Package | Purpose |
-|--------|---------|
+| --- | --- |
 | `crypto` | ECDSA, RSA, X.509, and PKIX support. |
 | `encoding` | ASN.1 and PEM support. |
 
@@ -233,7 +233,7 @@ The following types are structs with the listed attributes.
 This struct holds parameters provided by the application.
 
 | Field | Type | Description |
-|------|------|-----------|
+| --- | --- | --- |
 | CACert | `*x509.Certificate` | Holds the CA certificate. |
 | PrivateKey | `any` | Holds the CA private key. Can be an ECDSA or RSA key, as per currently supported signing algorithms. |
 | CSR | `*x509.CertificateRequest` | Holds the CSR. |
@@ -244,7 +244,7 @@ This struct holds parameters provided by the application.
 This struct holds parameters provided by the profile.
 
 | Field | Type | Description |
-|------|------|-----------|
+| --- | --- | --- |
 | SignatureAlgorithm | `x509.SignatureAlgorithm` | Holds the signature algorithm to be applied in the certificate signing operation. |
 | Validity | `SignProfileValidity` | Holds the certificate validity period given in the profile. |
 | KeyUsage | `SignProfileOptsKeyUsage` | Holds the key usage extension given in the profile. |
@@ -254,33 +254,33 @@ This struct holds parameters provided by the profile.
 ### `SignProfileValidity`
 
 | Field | Type | Description |
-|------|------|-----------|
+| --- | --- | --- |
 | NotBefore | [`time.Duration`](https://pkg.go.dev/time#Duration) | Holds the notBefore attribute of the X.509 certificate. |
 | NotAfter | [`time.Duration`](https://pkg.go.dev/time#Duration) | Holds the notAfter attribute of the X.509 certificate. |
 
 ### `SignProfileOptsKeyUsage`
 
 | Field | Type | Description |
-|------|------|-----------|
+| --- | --- | --- |
 | Flags | `[]x509.KeyUsage` | Holds bitmap of the combined key usages. |
 
 ### `SignProfileBasicConstraints`
 
 | Field | Type | Description |
-|------|------|-----------|
+| --- | --- | --- |
 | IsCA | `bool` | Holds configuration whether the generated certificate is a CA. |
 | PathLenConstraint | `int` | Holds the path length constraint of the generated certificate if it is a CA. |
 
 ### `SignProfileExtendedKeyUsage`
 
 | Field | Type | Description |
-|------|------|-----------|
+| --- | --- | --- |
 | Usages | `[]x509.ExtKeyUsage` | Holds a set of extended key usages. |
 
 ### `BitSizeConstraints`
 
 | Field | Type | Description |
-|------|------|-----------|
+| --- | --- | --- |
 | MinKeySize | `int` | Holds the minimum allowed key size. |
 | MaxKeySize | `int` | Holds the maximum allowed key size. |
 
@@ -292,16 +292,16 @@ Parses a PEM-encoded X.509 certificate.
 
 #### Input Parameters
 
-| Name    | Type   | Description |
-|-------------|--------|-------------|
-| `rawCert` | `[]byte`  | PEM-encoded certificate bytes. |
+| Name | Type | Description |
+| --- | --- | --- |
+| `rawCert` | `[]byte` | PEM-encoded certificate bytes. |
 
 #### Output
 
-| Type   | Description |
-|--------|-------------|
-| `*x509.Certificate`  | Parsed certificate. |
-| `error`  | Error string if the operation fails. |
+| Type | Description |
+| --- | --- |
+| `*x509.Certificate` | Parsed certificate. |
+| `error` | Error string if the operation fails. |
 
 ### `ParsePrivateKeyFromPEM`
 
@@ -309,16 +309,16 @@ Parses a PEM-encoded private key, supporting RSA (PKCS#1 & PKCS#8) and ECDSA key
 
 #### Input Parameters
 
-| Name    | Type   | Description |
-|-------------|--------|-------------|
-| `key` | `[]byte`  | PEM-encoded key bytes. |
+| Name | Type | Description |
+| --- | --- | --- |
+| `key` | `[]byte` | PEM-encoded key bytes. |
 
 #### Output
 
-| Type   | Description |
-|--------|-------------|
-| `any`  | Parsed private key as `*rsa.PrivateKey` or `*ecdsa.PrivateKey`. |
-| `error`  | Error string if the operation fails. |
+| Type | Description |
+| --- | --- |
+| `any` | Parsed private key as `*rsa.PrivateKey` or `*ecdsa.PrivateKey`. |
+| `error` | Error string if the operation fails. |
 
 ### `MapKeyUsageToExtension`
 
@@ -326,16 +326,16 @@ Encodes a key usage flag into a `pkix.Extension` structure.
 
 #### Input Parameters
 
-| Name    | Type   | Description |
-|-------------|--------|-------------|
-| `usage` | `x509.KeyUsage`  | Set of key usages. |
+| Name | Type | Description |
+| --- | --- | --- |
+| `usage` | `x509.KeyUsage` | Set of key usages. |
 
 #### Output
 
-| Type   | Description |
-|--------|-------------|
-| `pkix.Extension`  | Key usages mapped from X.509 format to a bitstring, encoded in ASN.1 and then put into an extension. |
-| `error`  | Error string if the operation fails. |
+| Type | Description |
+| --- | --- |
+| `pkix.Extension` | Key usages mapped from X.509 format to a bitstring, encoded in ASN.1 and then put into an extension. |
+| `error` | Error string if the operation fails. |
 
 ### `MapStringToKeyUsage`
 
@@ -343,16 +343,16 @@ Maps a string keyword to an `x509.KeyUsage`.
 
 #### Input Parameters
 
-| Name    | Type   | Description |
-|-------------|--------|-------------|
-| `in` | `string`  | String identifier of a key usage. |
+| Name | Type | Description |
+| --- | --- | --- |
+| `in` | `string` | String identifier of a key usage. |
 
 #### Output
 
-| Type   | Description |
-|--------|-------------|
-| `x509.KeyUsage`  | Key usage mapped to the respective `x509` constant. |
-| `error`  | Error string if the operation fails. |
+| Type | Description |
+| --- | --- |
+| `x509.KeyUsage` | Key usage mapped to the respective `x509` constant. |
+| `error` | Error string if the operation fails. |
 
 ### `MapExtKeyUsage`
 
@@ -360,16 +360,16 @@ Maps a string keyword to an `x509.ExtKeyUsage`.
 
 #### Input Parameters
 
-| Name    | Type   | Description |
-|-------------|--------|-------------|
-| `in` | `string`  | String identifier of an extended key usage. |
+| Name | Type | Description |
+| --- | --- | --- |
+| `in` | `string` | String identifier of an extended key usage. |
 
 #### Output
 
-| Type   | Description |
-|--------|-------------|
-| `x509.ExtKeyUsage`  | Extended key usage mapped to the respective `x509` constant. |
-| `error`  | Error string if the operation fails. |
+| Type | Description |
+| --- | --- |
+| `x509.ExtKeyUsage` | Extended key usage mapped to the respective `x509` constant. |
+| `error` | Error string if the operation fails. |
 
 ### `ComposeSignatureAlgorithm`
 
@@ -377,17 +377,17 @@ Determines a valid `x509.SignatureAlgorithm` from a signature and hash algorithm
 
 #### Input Parameters
 
-| Name    | Type   | Description |
-|-------------|--------|-------------|
-| `signAlg` | `Algorithm`  | String identifier of a signature algorithm. |
-| `hashAlg` | `Algorithm`  | String identifier of a hash algorithm. |
+| Name | Type | Description |
+| --- | --- | --- |
+| `signAlg` | `Algorithm` | String identifier of a signature algorithm. |
+| `hashAlg` | `Algorithm` | String identifier of a hash algorithm. |
 
 #### Output
 
-| Type   | Description |
-|--------|-------------|
-| `x509.SignatureAlgorithm`  | Combined signature algorithm consisting of a hash and signature algorithm. |
-| `error`  | Error string if the operation fails or the combination is not supported. |
+| Type | Description |
+| --- | --- |
+| `x509.SignatureAlgorithm` | Combined signature algorithm consisting of a hash and signature algorithm. |
+| `error` | Error string if the operation fails or the combination is not supported. |
 
 #### Supported Hash/Sign Algorithms
 
@@ -400,16 +400,16 @@ Validates a public/private key against configured bit size constraints.
 
 #### Input Parameters
 
-| Name    | Type   | Description |
-|-------------|--------|-------------|
+| Name | Type | Description |
+| --- | --- | --- |
 | `pubKey`/`privKey` | `any` | RSA/ECDSA public/private key as `*rsa.PublicKey`/`*rsa.PrivateKey` or `*ecdsa.PublicKey`/`*ecdsa.PrivateKey`. |
-| `constraintsByAlg` | `map[Algorithm]BitSizeConstraints`  | Key length constraints per algorithm. |
+| `constraintsByAlg` | `map[Algorithm]BitSizeConstraints` | Key length constraints per algorithm. |
 
 #### Output
 
-| Type   | Description |
-|--------|-------------|
-| `error`  | Error string if the operation fails or the given key is not adhering to key constraints given in the profile. Returns `nil` if checks are passed. |
+| Type | Description |
+| --- | --- |
+| `error` | Error string if the operation fails or the given key is not adhering to key constraints given in the profile. Returns `nil` if checks are passed. |
 
 ### `SignCertificate`
 
@@ -417,17 +417,17 @@ Generates and signs a new X.509 certificate using the native Go cryptographic li
 
 #### Input Parameters
 
-| Name    | Type   | Description |
-|-------------|--------|-------------|
+| Name | Type | Description |
+| --- | --- | --- |
 | `profileOpts` | `SignProfileOpts` | Certificate signing configuration provided by the profile. |
-| `apiOpts` | `SignAPIOpts`  | Certificate signing configuration provided by API parameters. |
+| `apiOpts` | `SignAPIOpts` | Certificate signing configuration provided by API parameters. |
 
 #### Output
 
-| Type   | Description |
-|--------|-------------|
-| `[]byte`  | Signed certificate bytes. |
-| `error`  | Error string if the operation fails. |
+| Type | Description |
+| --- | --- |
+| `[]byte` | Signed certificate bytes. |
+| `error` | Error string if the operation fails. |
 
 ### All implemented internal `Hash` Functions
 
@@ -435,16 +435,16 @@ All implemented hashing methods provide support for the supported hash functions
 
 #### Input Parameters
 
-| Name    | Type   | Description |
-|-------------|--------|-------------|
+| Name | Type | Description |
+| --- | --- | --- |
 | `dataToHash` | `[]byte` | Data to be hashed. |
 
 #### Output
 
-| Type   | Description |
-|--------|-------------|
-| `Hash`  | Hash value as lowercase hexadecimal hash string. |
-| `error`  | Error string if the operation fails. |
+| Type | Description |
+| --- | --- |
+| `Hash` | Hash value as lowercase hexadecimal hash string. |
+| `error` | Error string if the operation fails. |
 
 ---
 
@@ -463,7 +463,7 @@ It returns an instance of the API server together with the instantiated cryptogr
 The `di` package depends on the following internal packages:
 
 | Package | Purpose |
-|--------|---------|
+| --- | --- |
 | `api` | Supplies the gRPC service with the defined API endpoints. |
 | `c10y` | Interface to the cryptographic backend libraries (e.g., hashing, signing, validation). |
 | `profile` | Loads and validates the profiles. |
@@ -474,8 +474,8 @@ The `Container` struct holds dependencies required to run the server, whereas th
 
 ### `Container`
 
-| Field    | Type   | Description |
-|-------------|--------|-------------|
+| Field | Type | Description |
+| --- | --- | --- |
 | `Server` | `*api.CryptoBrokerServer` | An instance of the gRPC implementation of the Crypto Broker server API. |
 | `Logger` | `*log.Logger` | Logger used for server-side logging. |
 
@@ -485,15 +485,15 @@ This is the constructor for the `Container` struct.
 
 #### Input Parameters
 
-| Name    | Type   | Description |
-|-------------|--------|-------------|
+| Name | Type | Description |
+| --- | --- | --- |
 | `profiles` | `string` | Path to the `Profiles.yaml` file containing the list of profiles. |
 
 #### Output
 
-| Type   | Description |
-|--------|-------------|
-| `*Container`  | A fully initialized dependency container. |
+| Type | Description |
+| --- | --- |
+| `*Container` | A fully initialized dependency container. |
 
 ---
 
@@ -523,7 +523,7 @@ Loading the profile is the first step of the activity diagram, which on successf
 The `profile` package depends on the following packages:
 
 | Package | Purpose |
-|--------|---------|
+| --- | --- |
 | `crypto/x509` | Mainly for X.509 support in order to map strings to the respective (extended) key usage. |
 | `c10y` | Integration of internal cryptography package. |
 | `env` | Environment value for profile path. |
@@ -534,103 +534,103 @@ The `profile` package depends on the following packages:
 
 Represents a cryptographic profile, including metadata and API specifications.
 
-| Field     | Type            | Description                                 |
-|-----------|-----------------|---------------------------------------------|
-| `Name`    | `string`        | The name of the profile.                    |
-| `Settings`| `ProfileSettings` | Global configuration settings for the profile.   |
-| `API`     | `ProfileAPI`    | Specifies supported cryptographic functions, currently including `HashData` and `SignCertificate`. |
+| Field | Type | Description |
+| --- | --- | --- |
+| `Name` | `string` | The name of the profile. |
+| `Settings` | `ProfileSettings` | Global configuration settings for the profile. |
+| `API` | `ProfileAPI` | Specifies supported cryptographic functions, currently including `HashData` and `SignCertificate`. |
 
 ### `ProfileSettings`
 
 Defines configuration settings for a profile.
 
-| Field            | Type     | Description                            |
-|------------------|----------|----------------------------------------|
-| `CryptoLibrary`  | `string` | Name of the crypto library to be used. |
+| Field | Type | Description |
+| --- | --- | --- |
+| `CryptoLibrary` | `string` | Name of the crypto library to be used. |
 
 ### `ProfileAPI`
 
 Defines the APIs exposed by a profile for cryptographic operations.
 
-| Field             | Type                     | Description                         |
-|-------------------|--------------------------|-------------------------------------|
+| Field | Type | Description |
+| --- | --- | --- |
 | `SignCertificate` | `ProfileAPISignCertificate` | Configuration for certificate signing. |
-| `HashData`        | `ProfileAPIHashData`     | Configuration for hashing.          |
-| `SignData`        | `ProfileAPISignData`     | Configuration for data signing.     |
+| `HashData` | `ProfileAPIHashData` | Configuration for hashing. |
+| `SignData` | `ProfileAPISignData` | Configuration for data signing. |
 
 ### `ProfileAPIHashData`
 
 Specifies the hash algorithm for data hashing.
 
-| Field     | Type         | Description                |
-|-----------|--------------|----------------------------|
-| `HashAlg` | `c10y.Algorithm` | Hashing algorithm used.  |
+| Field | Type | Description |
+| --- | --- | --- |
+| `HashAlg` | `c10y.Algorithm` | Hashing algorithm used. |
 
 ### `ProfileAPISignData`
 
 Specifies the signing algorithm for data signing.
 
-| Field     | Type         | Description                  |
-|-----------|--------------|------------------------------|
-| `SignAlg` | `c10y.Algorithm` | Signing algorithm used.   |
+| Field | Type | Description |
+| --- | --- | --- |
+| `SignAlg` | `c10y.Algorithm` | Signing algorithm used. |
 
 ### `ProfileAPISignCertificate`
 
 Defines settings used during X.509 certificate signing.
 
-| Field                | Type                                           | Description                                   |
-|----------------------|------------------------------------------------|-----------------------------------------------|
-| `SignAlg`            | `c10y.Algorithm`                               | Algorithm for signing.                        |
-| `HashAlg`            | `c10y.Algorithm`                               | Algorithm for hashing.                       |
-| `SignatureAlgorithm` | `x509.SignatureAlgorithm`                      | X.509 signature algorithm including hashing and signing algorithm.                    |
-| `Validity`           | `ProfileAPISignCertificateValidity`            | Defines validity period offsets.              |
-| `KeyConstraints`     | `ProfileAPISignCertificateKeyConstraints`      | Key size constraints.                         |
-| `KeyUsage`           | `ProfileAPISignCertificateKeyUsage`            | X.509 key usage flags.                        |
-| `ExtendedKeyUsage`   | `ProfileAPISignCertificateExtendedKeyUsage`    | X.509 extended key usages.                    |
-| `BasicConstraints`   | `ProfileAPISignCertificateBasicConstraints`    | X.509 basic constraints settings.             |
+| Field | Type | Description |
+| --- | --- | --- |
+| `SignAlg` | `c10y.Algorithm` | Algorithm for signing. |
+| `HashAlg` | `c10y.Algorithm` | Algorithm for hashing. |
+| `SignatureAlgorithm` | `x509.SignatureAlgorithm` | X.509 signature algorithm including hashing and signing algorithm. |
+| `Validity` | `ProfileAPISignCertificateValidity` | Defines validity period offsets. |
+| `KeyConstraints` | `ProfileAPISignCertificateKeyConstraints` | Key size constraints. |
+| `KeyUsage` | `ProfileAPISignCertificateKeyUsage` | X.509 key usage flags. |
+| `ExtendedKeyUsage` | `ProfileAPISignCertificateExtendedKeyUsage` | X.509 extended key usages. |
+| `BasicConstraints` | `ProfileAPISignCertificateBasicConstraints` | X.509 basic constraints settings. |
 
 ### `ProfileAPISignCertificateValidity`
 
 Specifies the certificate validity window as time offsets.
 
-| Field            | Type           | Description                          |
-|------------------|----------------|--------------------------------------|
-| `NotBeforeOffset`| [`time.Duration`](https://pkg.go.dev/time#Duration) | Time before current for start validity. |
+| Field | Type | Description |
+| --- | --- | --- |
+| `NotBeforeOffset` | [`time.Duration`](https://pkg.go.dev/time#Duration) | Time before current for start validity. |
 | `NotAfterOffset` | [`time.Duration`](https://pkg.go.dev/time#Duration) | Time after current for end validity. |
 
 ### `ProfileAPISignCertificateKeyConstraints`
 
 Key size constraints for certificate subject and issuer.
 
-| Field    | Type                                                  | Description               |
-|----------|-------------------------------------------------------|---------------------------|
-| `Subject`| `map[c10y.Algorithm]c10y.BitSizeConstraints`          | Subject key size constraints. |
-| `Issuer` | `map[c10y.Algorithm]c10y.BitSizeConstraints`          | Issuer key size constraints.  |
+| Field | Type | Description |
+| --- | --- | --- |
+| `Subject` | `map[c10y.Algorithm]c10y.BitSizeConstraints` | Subject key size constraints. |
+| `Issuer` | `map[c10y.Algorithm]c10y.BitSizeConstraints` | Issuer key size constraints. |
 
 ### `ProfileAPISignCertificateKeyUsage`
 
 Defines the set of allowed X.509 key usages.
 
-| Field  | Type               | Description         |
-|--------|--------------------|---------------------|
-| `Flags`| `[]x509.KeyUsage`  | X.509 key usage flags. |
+| Field | Type | Description |
+| --- | --- | --- |
+| `Flags` | `[]x509.KeyUsage` | X.509 key usage flags. |
 
 ### `ProfileAPISignCertificateExtendedKeyUsage`
 
 Defines allowed X.509 extended key usages.
 
-| Field  | Type                  | Description              |
-|--------|-----------------------|--------------------------|
-| `Usages`| `[]x509.ExtKeyUsage` | X.509 extended usages.   |
+| Field | Type | Description |
+| --- | --- | --- |
+| `Usages` | `[]x509.ExtKeyUsage` | X.509 extended usages. |
 
 ### `ProfileAPISignCertificateBasicConstraints`
 
 Defines basic constraints for certificate signing.
 
-| Field               | Type   | Description                                  |
-|---------------------|--------|----------------------------------------------|
-| `CA`                | `bool` | Defines whether the generated certificate is a CA certificate. |
-| `PathLenConstraint` | `int`  | Path length constraint for CA certificates.  |
+| Field | Type | Description |
+| --- | --- | --- |
+| `CA` | `bool` | Defines whether the generated certificate is a CA certificate. |
+| `PathLenConstraint` | `int` | Path length constraint for CA certificates. |
 
 ### Raw Profile Values
 
@@ -650,14 +650,14 @@ Parses and validates YAML-formatted profiles from the provided filename. Sets th
 
 #### Input Parameters
 
-| Name         | Type     | Description                                         |
-|------------------|----------|-----------------------------------------------------|
-| profilesFileName | `string`   | Name of the profile YAML file in the root directory, currently set to `Profiles.yaml`.|
+| Name | Type | Description |
+| --- | --- | --- |
+| profilesFileName | `string` | Name of the profile YAML file in the root directory, currently set to `Profiles.yaml`. |
 
 #### Output
 
-| Type  | Description                                     |
-|-------|-------------------------------------------------|
+| Type | Description |
+| --- | --- |
 | error | Error if file reading, parsing, or validation fails. Otherwise `nil`. |
 
 ### `Retrieve`
@@ -666,16 +666,16 @@ Returns a specific profile by its name from the global `profiles` map, which con
 
 #### Input Parameters
 
-| Name | Type   | Description             |
-|----------|--------|-------------------------|
-| name     | string | Name of the profile to retrieve.|
+| Name | Type | Description |
+| --- | --- | --- |
+| name | string | Name of the profile to retrieve. |
 
 #### Output
 
-| Type    | Description                                         |
-|---------|-----------------------------------------------------|
-| Profile | The corresponding Profile object if it exists.     |
-| error   | Error if profiles are not loaded or name is unknown.|
+| Type | Description |
+| --- | --- |
+| Profile | The corresponding Profile object if it exists. |
+| error | Error if profiles are not loaded or name is unknown. |
 
 ### `mapToProfile`
 
@@ -683,16 +683,16 @@ Transforms a `rawProfile` parsed from YAML into a validated, strongly-typed `Pro
 
 #### Input Parameters
 
-| Name | Type       | Description                      |
-|----------|------------|----------------------------------|
-| p        | rawProfile | The raw profile parsed from YAML.|
+| Name | Type | Description |
+| --- | --- | --- |
+| p | rawProfile | The raw profile parsed from YAML. |
 
 #### Output
 
-| Type    | Description                                         |
-|---------|-----------------------------------------------------|
-| Profile | A validated  profile.             |
-| error   | An error if validation fails or transformation fails.|
+| Type | Description |
+| --- | --- |
+| Profile | A validated  profile. |
+| error | An error if validation fails or transformation fails. |
 
 ### `validate`
 
@@ -713,8 +713,8 @@ Types where this method is applicable are:
 
 #### Output
 
-| Type  | Description                          |
-|-------|--------------------------------------|
+| Type | Description |
+| --- | --- |
 | error | Aggregated validation error if any. Otherwise returns `nil`. |
 
 ## `protobuf`
@@ -735,7 +735,7 @@ A complete list of defined Protobuf messages as well as their structure and cont
 
     - Server loads profiles from `Profiles.yaml`
     - Dependency injection container initializes logger and cryptographic engine
-    - gRPC server is started, listening on a Unix socket on `/tmp/cryptobroker.sock`.
+    - gRPC server is started, listening on a Unix socket on `/tmp/open-crypto-broker/crypto-broker-server.sock`.
 
 1. Requests
 
