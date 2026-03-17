@@ -284,10 +284,10 @@ The client-side benchmarks measure complete end-to-end performance from applicat
 
 #### Health Check Operations
 
-| Operation  | Mode        | Latency (ns/op) | Latency (μs) | Throughput          | Memory     | Allocations  |
+| Operation  | Mode        | Latency (ns/op) | Latency (μs) | Throughput          | Memory     | Allocations   |
 |------------|-------------|-----------------|--------------|---------------------|------------|---------------|
-| HealthData | Sequential  | 194,015         | 194 μs       | 5,155 ops/sec       | 5,473 B/op | 97 allocs/op |
-| HealthData | Parallel    | 71,045          | 71 μs        | 14,080 ops/sec      | 5,499 B/op | 97 allocs/op |
+| HealthData | Sequential  | 194,015         | 194 μs       | 5,155 ops/sec       | 5,473 B/op | 97 allocs/op  |
+| HealthData | Parallel    | 71,045          | 71 μs        | 14,080 ops/sec      | 5,499 B/op | 97 allocs/op  |
 
 **Observations**:
 
@@ -300,13 +300,13 @@ The client-side benchmarks measure complete end-to-end performance from applicat
 Note: Configuration format is **CSR key / CA key** (e.g. "CSR P-256 / CA P-384" means the CSR uses a P-256 public key and is signed by a CA with a P-384 key).
 
 | Operation                                    | Mode        | Latency (ns/op) | Latency (μs/ms)       | Throughput       | Memory      | Allocations   |
-|----------------------------------------------|-------------|-----------------|----------------------|------------------|-------------|---------------|
-| SignCertificate (CSR P-256 / CA P-384)       | Sequential  | 1,733,483       | 1,733 μs (1.73 ms)   | 577 ops/sec      | 20,207 B/op | 129 allocs/op |
-| SignCertificate (CSR P-256 / CA P-384)       | Parallel    | 868,809         | 869 μs (0.87 ms)     | 1,151 ops/sec    | 20,516 B/op | 130 allocs/op |
-| SignCertificate (CSR P-256 / CA RSA-4096)    | Sequential  | 5,000,867       | 5,001 μs (5.00 ms)   | 200 ops/sec      | 23,120 B/op | 131 allocs/op |
-| SignCertificate (CSR P-256 / CA RSA-4096)    | Parallel    | 2,039,654       | 2,040 μs (2.04 ms)   | 490 ops/sec      | 23,653 B/op | 134 allocs/op |
-| SignCertificate (CSR P-521 / CA P-521)       | Sequential  | 7,694,561       | 7,695 μs (7.69 ms)   | 130 ops/sec      | 23,752 B/op | 130 allocs/op |
-| SignCertificate (CSR P-521 / CA P-521)       | Parallel    | 3,251,685       | 3,252 μs (3.25 ms)   | 308 ops/sec      | 25,064 B/op | 136 allocs/op |
+|----------------------------------------------|-------------|-----------------|-----------------------|------------------|-------------|---------------|
+| SignCertificate (CSR P-256 / CA P-384)       | Sequential  | 1,733,483       | 1,733 μs (1.73 ms)    | 577 ops/sec      | 20,207 B/op | 129 allocs/op |
+| SignCertificate (CSR P-256 / CA P-384)       | Parallel    | 868,809         | 869 μs (0.87 ms)      | 1,151 ops/sec    | 20,516 B/op | 130 allocs/op |
+| SignCertificate (CSR P-256 / CA RSA-4096)    | Sequential  | 5,000,867       | 5,001 μs (5.00 ms)    | 200 ops/sec      | 23,120 B/op | 131 allocs/op |
+| SignCertificate (CSR P-256 / CA RSA-4096)    | Parallel    | 2,039,654       | 2,040 μs (2.04 ms)    | 490 ops/sec      | 23,653 B/op | 134 allocs/op |
+| SignCertificate (CSR P-521 / CA P-521)       | Sequential  | 7,694,561       | 7,695 μs (7.69 ms)    | 130 ops/sec      | 23,752 B/op | 130 allocs/op |
+| SignCertificate (CSR P-521 / CA P-521)       | Parallel    | 3,251,685       | 3,252 μs (3.25 ms)    | 308 ops/sec      | 25,064 B/op | 136 allocs/op |
 
 **Observations**:
 
@@ -455,31 +455,31 @@ The following KPIs are tracked to ensure the Crypto Broker meets performance and
 
 Latency metrics measure the time delay for cryptographic operations, critical for applications requiring real-time or near-real-time responses. Lower latency improves user experience and enables higher throughput in request-heavy scenarios.
 
-| Metric                    | Description                                                              | Target   | Current Performance                                                                    | Notes                              |
-|---------------------------|--------------------------------------------------------------------------|----------|----------------------------------------------------------------------------------------|------------------------------------|
-| Hash Operation Latency    | Time to compute a hash of arbitrary data using SHA-2/SHA-3 algorithms.   | < 375μs  | 265μs (seq), 107μs (parallel)                                                          | Below target in both modes         |
+| Metric                    | Description                                                              | Target   | Current Performance                                                                           | Notes                              |
+|---------------------------|--------------------------------------------------------------------------|----------|-----------------------------------------------------------------------------------------------|------------------------------------|
+| Hash Operation Latency    | Time to compute a hash of arbitrary data using SHA-2/SHA-3 algorithms.   | < 375μs  | 265μs (seq), 107μs (parallel)                                                                 | Below target in both modes         |
 | Sign Operation Latency    | Time to generate an X.509 certificate from a CSR.                        | < 2.3ms  | CSR P-256/CA P-384: 1,733μs (seq), 869μs (parallel); up to 7,695μs seq (CSR P-521/CA P-521)   | Below target for lightest combo    |
-| Health Check Latency      | Time to query server health status.                                      | < 375μs  | 194μs (seq), 71μs (parallel)                                                           | Minimal overhead                   |
-| Parallel Performance Gain | Performance improvement when executing operations concurrently.          | > 2x     | 2.5x (hash), 2.7x (health), 2.0x–2.5x (sign)                                          | Meets target across all operations |
-| Memory per Operation      | RAM allocated per cryptographic operation.                               | < 40KB   | 9KB (hash), 5KB (health), 20–25KB (sign)                                               | Lightweight memory footprint       |
+| Health Check Latency      | Time to query server health status.                                      | < 375μs  | 194μs (seq), 71μs (parallel)                                                                  | Minimal overhead                   |
+| Parallel Performance Gain | Performance improvement when executing operations concurrently.          | > 2x     | 2.5x (hash), 2.7x (health), 2.0x–2.5x (sign)                                                  | Meets target across all operations |
+| Memory per Operation      | RAM allocated per cryptographic operation.                               | < 40KB   | 9KB (hash), 5KB (health), 20–25KB (sign)                                                      | Lightweight memory footprint       |
 
 #### Throughput Metrics
 
 Throughput metrics measure the volume of cryptographic operations the server can process per unit time. High throughput is essential for applications with high request volumes or batch processing requirements.
 
-| Metric                      | Description                                                              | Target  | Current Performance                               | Notes                                        |
-|-----------------------------|--------------------------------------------------------------------------|---------|---------------------------------------------------|----------------------------------------------|
-| Hash Operations/sec         | Number of hash computations completed per second under sustained load.   | > 2,700 | 3,770 (seq), 9,340 (parallel)                     | Exceeds target                               |
+| Metric                      | Description                                                              | Target  | Current Performance                               | Notes                                               |
+|-----------------------------|--------------------------------------------------------------------------|---------|---------------------------------------------------|-----------------------------------------------------|
+| Hash Operations/sec         | Number of hash computations completed per second under sustained load.   | > 2,700 | 3,770 (seq), 9,340 (parallel)                     | Exceeds target                                      |
 | Sign Operations/sec         | Number of certificate signing operations completed per second.           | > 440   | 577 (seq CSR P-256/CA P-384), 1,151 (parallel)    | Exceeds target (CSR P-256/CA P-384 lightest combo)  |
-| Health Check Operations/sec | Number of health checks completed per second.                            | > 2,700 | 5,155 (seq), 14,080 (parallel)                    | Excellent monitoring capacity                |
-| Parallel Scaling Efficiency | Throughput improvement ratio when switching to parallel execution.       | > 2x    | 2.5x (hash), 2.7x (health), 2.0x–2.5x (sign)     | Consistent improvement across all operations |
+| Health Check Operations/sec | Number of health checks completed per second.                            | > 2,700 | 5,155 (seq), 14,080 (parallel)                    | Excellent monitoring capacity                       |
+| Parallel Scaling Efficiency | Throughput improvement ratio when switching to parallel execution.       | > 2x    | 2.5x (hash), 2.7x (health), 2.0x–2.5x (sign)      | Consistent improvement across all operations        |
 
 #### Observability Coverage
 
 Observability metrics track the system's ability to expose internal state and behavior for monitoring, debugging, and performance analysis. Comprehensive observability enables proactive issue detection and rapid troubleshooting.
 
 | Metric                    | Description                                                                      | Target                | Current State | Notes                     |
-|---------------------------|----------------------------------------------------------------------------------|---------------------- |---------------|---------------------------|
+|---------------------------|----------------------------------------------------------------------------------|-----------------------|---------------|---------------------------|
 | Trace Coverage            | Percentage of crypto operations instrumented with distributed tracing spans.     | 100% of operations    | 100%          | OpenTelemetry integration |
 | Structured Logging        | Percentage of log events emitted in machine-parsable format.                     | 100% of events        | 100%          | JSON/text format          |
 
@@ -644,18 +644,18 @@ go version -m bin/cryptobroker-server
 
 #### Client-Side (End-to-End) Performance Comparison
 
-| Operation                               | Non-FIPS  | FIPS      | Overhead   | Impact                              |
-|-----------------------------------------|-----------|-----------|------------|-------------------------------------|
-| HashData (seq)                          | 265 μs    | 266 μs    | +1 μs      | +0.2% (negligible)                  |
-| HashData (parallel)                     | 107 μs    | 92 μs     | -15 μs     | -14.0% (measurement variance)       |
+| Operation                                    | Non-FIPS  | FIPS      | Overhead   | Impact                              |
+|----------------------------------------------|-----------|-----------|------------|-------------------------------------|
+| HashData (seq)                               | 265 μs    | 266 μs    | +1 μs      | +0.2% (negligible)                  |
+| HashData (parallel)                          | 107 μs    | 92 μs     | -15 μs     | -14.0% (measurement variance)       |
 | SignCertificate CSR P-256/CA P-384 (seq)     | 1,733 μs  | 1,747 μs  | +14 μs     | +0.8% (negligible)                  |
 | SignCertificate CSR P-256/CA P-384 (para.)   | 869 μs    | 696 μs    | -173 μs    | -19.9% (concurrent execution)       |
 | SignCertificate CSR P-256/CA RSA-4096 (seq)  | 5,001 μs  | 5,521 μs  | +520 μs    | +10.4%                              |
 | SignCertificate CSR P-256/CA RSA-4096 (para.)| 2,040 μs  | 2,311 μs  | +271 μs    | +13.3%                              |
 | SignCertificate CSR P-521/CA P-521 (seq)     | 7,695 μs  | 9,323 μs  | +1,628 μs  | +21.2%                              |
 | SignCertificate CSR P-521/CA P-521 (para.)   | 3,252 μs  | 3,372 μs  | +120 μs    | +3.7%                               |
-| HealthData (seq)                        | 194 μs    | 195 μs    | +1 μs      | +0.6% (negligible)                  |
-| HealthData (parallel)                   | 71 μs     | 69 μs     | -2 μs      | -2.8% (within margin of error)      |
+| HealthData (seq)                             | 194 μs    | 195 μs    | +1 μs      | +0.6% (negligible)                  |
+| HealthData (parallel)                        | 71 μs     | 69 μs     | -2 μs      | -2.8% (within margin of error)      |
 
 #### Key Findings
 
@@ -750,11 +750,11 @@ applications:
 
 - **Pre-compiled Binaries**: Deploy compiled executables, not source code
 - **Reasons**:
-  - Binary can be signed for integrity verification
-  - No dependency resolution at runtime
-  - Faster deployment (no compilation step)
-  - Reproducible builds independent of CF buildpack version
-  - Meets compliance requirements (verified artifacts)
+    - Binary can be signed for integrity verification
+    - No dependency resolution at runtime
+    - Faster deployment (no compilation step)
+    - Reproducible builds independent of CF buildpack version
+    - Meets compliance requirements (verified artifacts)
 
 1. Download pre-compiled server binary from releases
 2. Configure profiles and manifest files
@@ -776,8 +776,8 @@ Refer to the deployment repository for platform-specific examples and current co
 **Key Components**:
 
 - Pod with multiple containers:
-  - Application container(s) using client library
-  - Crypto Broker Server container
+    - Application container(s) using client library
+    - Crypto Broker Server container
 - Shared volume for Unix socket
 - ConfigMaps for profiles and configuration
 - Optional: Secrets for certificates
