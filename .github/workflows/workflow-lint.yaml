@@ -1,0 +1,17 @@
+name: Workflow Lint
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+
+permissions: {}
+
+jobs:
+  lint:
+    uses: open-crypto-broker/.github/.github/workflows/workflow-lint.yaml@main # nolint # zizmor: ignore[unpinned-uses]
+
