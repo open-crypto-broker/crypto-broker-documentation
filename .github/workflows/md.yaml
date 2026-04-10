@@ -5,14 +5,18 @@ on:
   push:
     branches: [ main ]
 
+permissions: {}
+
 jobs:
   markdownlint-pipeline:
+    permissions: {}
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
           fetch-depth: 0 # important for git diff comparisons
+          persist-credentials: false
 
     - name: Run Markdownlint
-      uses: open-crypto-broker/.github/actions/markdownlint@main
+      uses: open-crypto-broker/.github/actions/markdownlint@main # nolint # zizmor: ignore[unpinned-uses]
