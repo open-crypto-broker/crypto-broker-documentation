@@ -28,7 +28,6 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
-          persist-credentials: false
 
       - name: Use git-cliff for changelog generation, create git tag, push to repo
         uses: open-crypto-broker/.github/actions/git-cliff@main # nolint # zizmor: ignore[unpinned-uses]
