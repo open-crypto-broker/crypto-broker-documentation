@@ -1,22 +1,15 @@
 name: Markdownlint
 
 on:
-  pull_request:
   push:
     branches: [ main ]
+  pull_request:
 
 permissions: {}
 
 jobs:
-  markdownlint-pipeline:
-    permissions: {}
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      with:
-          fetch-depth: 0 # important for git diff comparisons
-          persist-credentials: false
-
-    - name: Run Markdownlint
-      uses: open-crypto-broker/.github/actions/markdownlint@main # nolint # zizmor: ignore[unpinned-uses]
+  lint:
+    name: Markdownlint
+    permissions:
+      contents: read # for checking out code
+    uses: open-crypto-broker/.github/.github/workflows/markdownlint.yaml@main # nolint # zizmor: ignore[unpinned-uses]

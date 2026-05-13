@@ -2,12 +2,13 @@ name: Workflow Lint
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
 
 permissions: {}
 
 jobs:
   lint:
+    name: Lint Workflow
     uses: open-crypto-broker/.github/.github/workflows/workflow-lint.yaml@main # nolint # zizmor: ignore[unpinned-uses]
 
