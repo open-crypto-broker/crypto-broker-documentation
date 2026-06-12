@@ -50,7 +50,7 @@ TBC
 
 A dedicated key storage service (sidecar or external) that the Crypto Broker connects to via an internal API.
 
-```
+```ascii
 ┌─────────────┐  gRPC   ┌──────────────────┐  Internal API  ┌────────────────┐
 │ Application │───────> │ Crypto Broker    │──────────────> │ Key Store      │
 │             │         │ Server           │                │ Service        │
@@ -74,7 +74,7 @@ A dedicated key storage service (sidecar or external) that the Crypto Broker con
 
 The Crypto Broker Server gains statefulness and manages keys internally in local storage.
 
-```
+```ascii
 ┌─────────────┐  gRPC   ┌──────────────────────────┐
 │ Application │───────> │ Crypto Broker Server     │
 │             │         │ + Integrated Key Store   │
@@ -99,7 +99,7 @@ The Crypto Broker Server gains statefulness and manages keys internally in local
 An abstraction layer within the Crypto Broker that defines a key management interface.
 Multiple backend implementations (openBao, openKMS, file-based, etc.) can be plugged in via configuration.
 
-```
+```ascii
 ┌─────────────┐  gRPC   ┌──────────────────────────────────────┐
 │ Application │───────> │ Crypto Broker Server                 │
 │             │         │                                      │
@@ -127,7 +127,7 @@ Multiple backend implementations (openBao, openKMS, file-based, etc.) can be plu
 
 The following key lifecycle must be supported by every backend implementation:
 
-```
+```ascii
  Generate ──> Store ──> Use ──> Expire ──> Delete/Archive
                 ▲        │
                 │        ▼
@@ -135,7 +135,7 @@ The following key lifecycle must be supported by every backend implementation:
 ```
 
 | Phase | Description |
-|-------|-------------|
+| --- | --- |
 | **Generate** | Backend can create a key per profile constraints (algorithm, size) |
 | **Import** | External key material is imported into the backend (depending on profile constraints) |
 | **Store** | Key persisted securely, associated with a key-id and metadata |
