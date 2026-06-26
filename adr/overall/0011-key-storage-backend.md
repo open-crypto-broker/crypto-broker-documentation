@@ -10,10 +10,10 @@ consulted: Robin Winzler, Miyana Stange, Pawel Chmielewski, Damian Jankowski
 ## Context and Problem Statement
 
 The Crypto Broker Server is currently stateless — it stores no secrets and performs only hash and sign certificate operations.
-To support symmetric encryption (e.g. AES-GCM), the relevant cryptographic material (key, nonce, AAD) must be available for every operation.
+For other cryptographic operations which require longer-living materials a key management system (KMS) is needed.
 There are fundamentally two ways to make this material available, and which one applies depends on who owns the cryptographic material and the responsibility for managing it (the Crypto Broker operator vs. the calling application):
 
-* **Caller-managed (no KMS):** The application passes all required material (raw key, nonce, AAD) with every call.
+* **Caller-managed (no KMS):** The application passes all required material (e.g. raw key, nonce, AAD, ...) with every call.
   In this mode the Crypto Broker stores nothing and effectively acts as a thin, algorithm-specific wrapper.
   Securely managing and persisting the key material is fully delegated to the caller, so no key storage backend is required.
 * **Broker-managed (KMS-backed):** A KMS holds the key material on behalf of the application.
@@ -32,7 +32,6 @@ A single, hard-coded key storage implementation would limit the Crypto Broker's 
 
 * KMS support must be optional and selectable per profile (caller-managed vs. broker-managed)
 * Support for multiple key management backends (OpenBao, OpenKCM, etc.)
-* Full key lifecycle management (generate, import, rotate, expire, delete/archive)
 * Users should be able to choose which backend fits their environment
 * Clean separation of concerns between cryptographic operations and key management
 * Extensibility for future backend integrations
@@ -140,27 +139,6 @@ Multiple backend implementations (OpenBao, OpenKCM, file-based, etc.) can be plu
 * Bad, because every key lifecycle operation must be implemented per backend
 * Bad, because higher implementation and maintenance effort
 * Bad, because backend-specific quirks may leak through the abstraction
-
-## Key Lifecycle
-
-The following key lifecycle must be supported by every backend implementation:
-
-```ascii
- Generate ──> Store ──> Use ──> Expire ──> Delete/Archive
-                ▲        │
-                │        ▼
-         Import └───── Rotate
-```
-
-| Phase | Description |
-| --- | --- |
-| **Generate** | Backend can create a key per profile constraints (algorithm, size) |
-| **Import** | External key material is imported into the backend (depending on profile constraints) |
-| **Store** | Key persisted securely, associated with a key-id and metadata |
-| **Use** | Key retrieved for encrypt/decrypt operations |
-| **Rotate** | New key version created; old version retained for decryption |
-| **Expire** | Key marked inactive after TTL or policy; no new encryptions allowed |
-| **Delete/Archive** | Key material securely wiped or archived per policy |
 
 ## More Information
 
