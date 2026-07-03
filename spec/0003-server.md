@@ -96,11 +96,11 @@ Depending on the requested operation, the server validates that:
 - The requested profile exists and is valid.
 - The requested algorithm is supported and permitted by the profile.
 - For `SignCertificate`:
-  - The CSR, CA certificate and CA private key are well-formed and can be parsed.
-  - The CA public key matches the CA private key.
-  - The signature algorithm in the profile is compatible with the provided key.
-  - The subject's public key and the issuer's private key satisfy the key-size constraints defined in the profile.
-  - The requested certificate validity lies within the boundaries permitted by the profile.
+    - The CSR, CA certificate and CA private key are well-formed and can be parsed.
+    - The CA public key matches the CA private key.
+    - The signature algorithm in the profile is compatible with the provided key.
+    - The subject's public key and the issuer's private key satisfy the key-size constraints defined in the profile.
+    - The requested certificate validity lies within the boundaries permitted by the profile.
 
 Requests that violate any of these rules are rejected with a verbose error identifying the failed check.
 
