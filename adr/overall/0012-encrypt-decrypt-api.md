@@ -66,7 +66,7 @@ Which `KeySource` variant is valid is governed by the profile: a profile **witho
 
 ### Confirmation
 
-TBC
+Confirmed by the stakeholders on 2026-06-17.
 
 ## Pros and Cons of the Options
 
