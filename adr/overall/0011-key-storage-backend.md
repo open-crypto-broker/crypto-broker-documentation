@@ -58,7 +58,7 @@ The abstraction layer is engaged only when a profile selects a KMS; profiles wit
 
 ### Confirmation
 
-TBC
+Confirmed by the stakeholders on 2026-06-17.
 
 ## Pros and Cons of the Options
 
