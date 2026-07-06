@@ -64,7 +64,7 @@ Defines settings for signing X.509 certificate signing requests (CSR).
 | `ValidNotBeforeOffset` | String | Relative time offset when the certificate becomes valid (e.g., `-1h`). |
 | `ValidNotAfterOffset` | String | Relative time offset after which the certificate expires (e.g., `8760h` for 1 year). |
 
-> Note: Time offset formats (e.g., `-1h`, `8760h`) are expected to be strings compatible with Go duration parsing. Please refer to [time@go1.24.3 ParseDuration()](https://pkg.go.dev/time@go1.24.3#ParseDuration) for the syntax definition.
+> Note: Time offset formats (e.g., `-1h`, `8760h`) are expected to be strings compatible with Go duration parsing. Please refer to [time.ParseDuration()](https://pkg.go.dev/time#ParseDuration) for the syntax definition.
 
 ### `KeyConstraints`
 
@@ -107,204 +107,205 @@ This section enforces the following constraints for the generated certificate. I
 
 #### Basic Constraints
 
-The generated certificate must have the attribute ```Basic Constraints``` set to the values provided in the profile. The broker must read this value from the profile and set it explicitly in the generated certificate. Typical values include setting ```CA``` to ```FALSE```, indicating that the certificate must not be used to issue other certificates.
+The generated certificate must have the attribute `Basic Constraints` set to the values provided in the profile. The broker must read this value from the profile and set it explicitly in the generated certificate. Typical values include setting `CA` to `FALSE`, indicating that the certificate must not be used to issue other certificates.
 
-- Attribute name: ```Basic Constraints```
-- Value type: ```Key-Value Pairs```
+- Attribute name: `Basic Constraints`
+- Value type: `Key-Value Pairs`
 - Keys and allowed value types:
-    - ```CA```: ```Boolean```
-    - ```Path Length Constraint```: ```Integer``` (optional)
+    - `CA`: `Boolean`
+    - `Path Length Constraint`: `Integer` (optional)
 - Rules:
-    - If ```CA=FALSE```, ```Path Length Constraint``` must not be included. The ```Critical``` flag must not be set.
-    - If ```CA=TRUE```, ```Path Length Constraint``` may be included to limit the number of subordinate CA certificates. The ```Critical``` flag must be set to ```true```, as required by [RFC 5280 Section 4.2.1.9](https://www.rfc-editor.org/rfc/rfc5280#section-4.2.1.9).
+    - If `CA=FALSE`, `Path Length Constraint` must not be included. The `Critical` flag must not be set.
+    - If `CA=TRUE`, `Path Length Constraint` may be included to limit the number of subordinate CA certificates. The `Critical` flag must be set to `true`, as required by [RFC 5280 Section 4.2.1.9](https://www.rfc-editor.org/rfc/rfc5280#section-4.2.1.9).
 - Examples:
-    - ```Basic Constraints: CA:FALSE```
-    - ```Basic Constraints: CA:TRUE, Path Length Constraint:2```
+    - `Basic Constraints: CA:FALSE`
+    - `Basic Constraints: CA:TRUE, Path Length Constraint:2`
 
 #### Key Usage
 
-The generated certificate must have the attribute ```Key Usage``` set to the value provided in the profile. The broker must read this value from the profile and set it explicitly in the generated certificate. Only the values specified in the profile must be set, and all others must be excluded from the certificate’s key usage extension.
+The generated certificate must have the attribute `Key Usage` set to the value provided in the profile. The broker must read this value from the profile and set it explicitly in the generated certificate. Only the values specified in the profile must be set, and all others must be excluded from the certificate’s key usage extension.
 
-- Attribute name: ```Key Usage```
-- Value type: ```List of Strings```
+- Attribute name: `Key Usage`
+- Value type: `List of Strings`
 - Allowed values:
-    - ```Digital Signature```
-    - ```Non Repudiation```
-    - ```Key Encipherment```
-    - ```Data Encipherment```
-    - ```Key Agreement```
-    - ```Key Cert Sign```
-    - ```CRL Sign```
-    - ```Encipher Only```
-    - ```Decipher Only```
+    - `Digital Signature`
+    - `Non Repudiation`
+    - `Key Encipherment`
+    - `Data Encipherment`
+    - `Key Agreement`
+    - `Key Cert Sign`
+    - `CRL Sign`
+    - `Encipher Only`
+    - `Decipher Only`
 - Rules:
     - The attribute must include only values explicitly defined in the profile.
-    - The ```Critical``` flag must be set to `true`.
+    - The `Critical` flag must be set to `true`.
 - Examples:
-    - ```Key Usage: Digital Signature, Key Encipherment```
+    - `Key Usage: Digital Signature, Key Encipherment`
 
 #### Extended Key Usage
 
-The generated certificate must have the attribute ```Extended Key Usage``` set to the value provided in the profile. The broker must read this value from the profile and set it explicitly in the generated certificate. Only the values specified in the profile must be set, and all others must be excluded from the certificate’s extended key usage extension.
+The generated certificate must have the attribute `Extended Key Usage` set to the value provided in the profile. The broker must read this value from the profile and set it explicitly in the generated certificate. Only the values specified in the profile must be set, and all others must be excluded from the certificate’s extended key usage extension.
 
-- Attribute name: ```Extended Key Usage```
-- Value type: ```List of Strings```
+- Attribute name: `Extended Key Usage`
+- Value type: `List of Strings`
 - Allowed values:
-    - ```TLS Web Server Authentication```
-    - ```TLS Web Client Authentication```
-    - ```Code Signing```
-    - ```Email Protection```
-    - ```Time Stamping```
-    - ```OCSP Signing```
+    - `TLS Web Server Authentication`
+    - `TLS Web Client Authentication`
+    - `Code Signing`
+    - `Email Protection`
+    - `Time Stamping`
+    - `OCSP Signing`
 - Rules:
     - The attribute must include only values explicitly defined in the profile.
 - Examples:
-    - ```Extended Key Usage: TLS Web Client Authentication```
-    - ```Extended Key Usage: TLS Web Server Authentication, Code Signing```
+    - `Extended Key Usage: TLS Web Client Authentication`
+    - `Extended Key Usage: TLS Web Server Authentication, Code Signing`
 
 ### Values provided by API parameters
 
 #### Subject
 
-The generated certificate must have the attribute ```Subject``` set to the Distinguished Name (DN) provided either in the Certificate Signing Request or via an additional API parameter. The broker must determine the source based on availability and set the subject field accordingly in the generated certificate attribute `Subject`.
+The generated certificate must have the attribute `Subject` set to the Distinguished Name (DN) provided either in the Certificate Signing Request or via an additional API parameter. The broker must determine the source based on availability and set the subject field accordingly in the generated certificate attribute `Subject`.
 
-- Attribute name: ```Subject```
-- Value type: ```Distinguished Name (DN) String```
+- Attribute name: `Subject`
+- Value type: `Distinguished Name (DN) String`
 - Source:
     - From API parameter, if present.
     - From CSR, if API parameter does not specify it.
 - Examples:
-    - ```Subject: CN=John Doe, OU=SAP BTP Clients, O=SAP, L=Berlin, S=Berlin, C=DE```
+    - `Subject: CN=John Doe, OU=SAP BTP Clients, O=SAP, L=Berlin, S=Berlin, C=DE`
 
 #### Issuer
 
-The generated certificate must have the attribute ```Issuer``` set to the DN of the issuing CA. This value is taken directly from the issuer's certificate and must not be modified. The DN of the issuing CA is set in the generated certificate attribute `Issuer`.
+The generated certificate must have the attribute `Issuer` set to the DN of the issuing CA. This value is taken directly from the issuer's certificate and must not be modified. The DN of the issuing CA is set in the generated certificate attribute `Issuer`.
 
-- Attribute name: ```Issuer```
-- Value type: ```Distinguished Name (DN) String```
+- Attribute name: `Issuer`
+- Value type: `Distinguished Name (DN) String`
 - Source:
     - Automatically extracted from the CA certificate provided as an API parameter.
 - Rules:
     - The broker must not alter or override the issuer DN.
 - Examples:
-    - ```Issuer: CN=SAP PKI Certificate Service Client CA, OU=SAP BTP Clients, O=SAP SE, L=cf-eu10-canary, C=DE```
+    - `Issuer: CN=SAP PKI Certificate Service Client CA, OU=SAP BTP Clients, O=SAP SE, L=cf-eu10-canary, C=DE`
 
 #### Subject Key Identifier
 
-The generated certificate must have the attribute ```Subject Key Identifier``` set by the broker.
+The generated certificate must have the attribute `Subject Key Identifier` set by the broker.
 The broker computes this value from the public key contained in the Certificate Signing Request.
 This extension is used to identify certificates that contain a particular public key and facilitates the construction of certification paths.
 As defined in [RFC 5280 Section 4.2.1.2](https://www.rfc-editor.org/rfc/rfc5280#section-4.2.1.2), this extension is required for CA certificates and recommended for end-entity certificates.
 
-- Attribute name: ```Subject Key Identifier```
-- Value type: ```Byte Array```
+- Attribute name: `Subject Key Identifier`
+- Value type: `Byte Array`
 - Source:
     - Computed from the public key in the CSR.
 - Rules:
     - The value must be derived from the public key using one of the methods described in RFC 5280 Section 4.2.1.2 (typically a SHA-1 hash of the BIT STRING value of the subjectPublicKey).
     - The extension must be marked as non-critical.
-    - For CA certificates (```Basic Constraints: CA=TRUE```), this extension must be included.
-    - For end-entity certificates (```Basic Constraints: CA=FALSE```), this extension should be included.
+-    - For CA certificates (`Basic Constraints: CA=TRUE`), this extension must be included.
+-    - For end-entity certificates (`Basic Constraints: CA=FALSE`), this extension should be included.
 - Examples:
-    - ```Subject Key Identifier: A3:12:4E:9C:78:B0:5D:FA:21:6E:33:8A:C7:D4:2B:90:1F:55:E8:3C```
+    - `Subject Key Identifier: A3:12:4E:9C:78:B0:5D:FA:21:6E:33:8A:C7:D4:2B:90:1F:55:E8:3C`
 
 #### Authority Key Identifier
 
-The generated certificate must have the attribute ```Authority Key Identifier``` set by the broker. The broker derives this value from the issuer CA certificate.
+The generated certificate must have the attribute `Authority Key Identifier` set by the broker. The broker derives this value from the issuer CA certificate.
 
-- Attribute name: ```Authority Key Identifier```
-- Value type: ```Byte Array```
+- Attribute name: `Authority Key Identifier`
+- Value type: `Byte Array`
 - Source:
     - Automatically extracted from the CA certificate provided as an API parameter.
 - Rules:
-    - The value is derived from the ```Subject Key Identifier``` of the CA certificate.
+    - The value is derived from the `Subject Key Identifier` of the CA certificate.
     - The broker must not alter or override the Authority Key Identifier.
 - Examples:
-    - ```Authority Key Identifier: 0C:00:7D:CF:72:AE:93:A0:65:00:15:12:83:FA:8D:45:1D:92:4D:7D```
+    - `Authority Key Identifier: 0C:00:7D:CF:72:AE:93:A0:65:00:15:12:83:FA:8D:45:1D:92:4D:7D`
 
 #### Public Key
 
 The generated certificate must include a public key that meets the key length and algorithm constraints specified in the profile. The broker must extract the public key from the CSR and validate its algorithm and key size against the key constraints defined in the profile. The broker must reject CSRs with non-compliant keys.
 
-- Attribute name: ```Public Key```
-- Value type: ```Object (Algorithm, Key Size)```
+- Attribute name: `Public Key`
+- Value type: `Object (Algorithm, Key Size)`
 - Source:
     - Provided in the CSR
-- Validation: Profile field ```Key Constraints```
-    - ```MinKeySize```: ```Integer```
-    - ```MaxKeySize```: ```Integer```
+-    - Validation: Profile field `Key Constraints`
+-    - `MinKeySize`: `Integer`
+-    - `MaxKeySize`: `Integer`
 - Keys and allowed values:
-    - ```Algorithm```: Public key algorithm name as a ```String```
-    - ```Key Size```: ```Integer```
+    - `Algorithm`: Public key algorithm name as a `String`
+    - `Key Size`: `Integer`
 - Rules:
     - The public key algorithm must match one allowed by the profile.
     - The key size must be within the bounds defined by the key constraints.
 - Examples:
-    - ```Public Key: rsaEncryption (3072 Bit)```
-    - ```Public Key: id-ecPublicKey (384 bit)```
+    - `Public Key: rsaEncryption (3072 Bit)`
+    - `Public Key: id-ecPublicKey (384 bit)`
 
 #### CRL Distribution Points
 
-The generated certificate should include the attribute ```CRL Distribution Points```, which provides one or more URLs where the Certificate Revocation List (CRL) can be retrieved. The broker sets this value based on provided API parameters, if available.
+The generated certificate should include the attribute `CRL Distribution Points`, which provides one or more URLs where the Certificate Revocation List (CRL) can be retrieved. The broker sets this value based on provided API parameters, if available.
 Note: The Crypto Broker does not generate or host CRLs itself; it only includes the specified CRL distribution points in the certificate.
 
-- Attribute name: ```CRL Distribution Points```
-- Value type: ```List of URIs```
+- Attribute name: `CRL Distribution Points`
+- Value type: `List of URIs`
 - Source: Provided by API parameter
 - Rules:
     - The broker include all CRL URIs in the generated certificate.
 - Examples:
-    - ```CRL Distribution Points: https://certificate-service-crls.cf.sap.hana.ondemand.com/1745567416_1751014216.crl```
+    - `CRL Distribution Points: https://certificate-service-crls.cf.sap.hana.ondemand.com/1745567416_1751014216.crl`
 
 ### Values calculated by profile rules
 
 #### Serial Number
 
-The generated certificate must have the attribute ```Serial Number``` set by the broker. This value must be unique and randomly generated by the broker according to the format ruleset listed below.
+The generated certificate must have the attribute `Serial Number` set by the broker. This value must be unique and randomly generated by the broker according to the format ruleset listed below.
 
-- Attribute name: ```Serial Number```
-- Value type: ```Byte Array``` / ```Integer```
+- Attribute name: `Serial Number`
+- Value type: `Byte Array` / `Integer`
 - Rules:
     - The serial number must be unique and positive.
     - The profile provides the first byte of the serial number, e.g. `0x7F`. This is to make sure that the serial number is positive.
     - The generation of the serial number must use a cryptographically secure pseudorandom number generator.
     - The serial number must comply with [RFC 5280 Section 4.1.2.2](https://www.rfc-editor.org/rfc/rfc5280#section-4.1.2.2).
 - Example:
-    - ```Serial Number: 7F:87:60:5B:72:F9:4D:F3:20:2D:BB:E8:1D:57:29:99:32:D2:93:56```
+    - `Serial Number: 7F:87:60:5B:72:F9:4D:F3:20:2D:BB:E8:1D:57:29:99:32:D2:93:56`
 
 #### Validity
 
 The generated certificate must have the attributes `Validity not before` and `Validity not after` set by the broker based on rules provided in the profile. The application may request a custom validity period via API parameters.
 
 - Attribute names:
-    - ```Validity not before```: ```Timestamp``` (Start of certificate validity)
-    - ```Validity not after```: ```Timestamp``` (End of certificate validity)
-- Value type: ```Datetime (UTC)```
-- Validation: Profile field ```Validity```:
-    - ```ValidNotBeforeOffset```: ```String```
+- Attribute names:
+    - `Validity not before`: `Timestamp` (Start of certificate validity)
+    - `Validity not after`: `Timestamp` (End of certificate validity)
+- Value type: `Datetime (UTC)`
+- Validation: Profile field `Validity`:
+    - `ValidNotBeforeOffset`: `String`
         - Go time package formatted String, e. g., -1h
-    - ```ValidNotAfterOffset```: ```String```
-        - Go time package formatted String, e. g., 8760h
+    - `ValidNotAfterOffset`: `String`
+        - Go time package formatted String, e.g., 8760h
 - Rules:
-    - The broker must compute ```Validity not before``` and ```Validity not after``` based on profile rules. If an API parameter specifies a desired validity period, the broker must validate this request against the profile constraints and apply it only if permitted. If no custom validity is provided, default values from the profile must be used.
-    - ```Validity not before``` must not be after ```Validity not after```.
+- The broker must compute `Validity not before` and `Validity not after` based on profile rules. If an API parameter specifies a desired validity period, the broker must validate this request against the profile constraints and apply it only if permitted. If no custom validity is provided, default values from the profile must be used.
+- `Validity not before` must not be after `Validity not after`.
 - Examples:
-    - ```Validity not before: 2025-05-21T00:00:00Z```
-    - ```Validity not after : 2026-05-21T00:00:00Z```
+    - `Validity not before: 2025-05-21T00:00:00Z`
+    - `Validity not after : 2026-05-21T00:00:00Z`
 
 #### Signature Algorithm
 
-The generated certificate must have the attribute ```Signature Algorithm``` set to a combination of the hash algorithm and signature algorithm defined in the profile. The broker must compute the correct combined algorithm and use it to sign the certificate.
+The generated certificate must have the attribute `Signature Algorithm` set to a combination of the hash algorithm and signature algorithm defined in the profile. The broker must compute the correct combined algorithm and use it to sign the certificate.
 
-- Attribute name: ```Signature Algorithm```
-- Value type: ```String```
+- Attribute name: `Signature Algorithm`
+- Value type: `String`
 - Source:
     - Hash algorithm and signature algorithm are provided separately in the following profile fields:
-        - ```HashAlg```: ```String```
-        - ```SignAlg```: ```String```
+        - `HashAlg`: `String`
+        - `SignAlg`: `String`
 - Rules:
     - The broker must derive and apply the correct combined algorithm for certificate signing.
     - Only the algorithms explicitly specified in the profile may be used.
 - Examples:
-    - ```Signature Algorithm: sha256WithRsaEncryption```
-    - ```Signature Algorithm: ecdsaWithSHA512```
+    - `Signature Algorithm: sha256WithRsaEncryption`
+    - `Signature Algorithm: ecdsaWithSHA512`

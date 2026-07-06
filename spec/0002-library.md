@@ -4,8 +4,8 @@
 
 The Crypto Broker service provides remote cryptographic operations over gRPC, including:
 
-- Hashing arbitrary binary data: ```HashData``` API
-- Generating X.509 certificates based on Certificate Signing Requests (CSRs): ```SignCertificate``` API
+- Hashing arbitrary binary data: `HashData` API
+- Generating X.509 certificates based on Certificate Signing Requests (CSRs): `SignCertificate` API
 
 This specification describes the behavior and message formats of the API endpoints for clients across any programming language. The library does not perform cryptographic operations locally. It delegates all such tasks to the Crypto Broker.
 
@@ -23,14 +23,14 @@ This specification describes the behavior and message formats of the API endpoin
 
 The Crypto Broker exposes two separate gRPC services, defined in `messages.proto`:
 
-- ```CryptoGrpc``` — the production service used by client applications. It exposes the cryptographic operations as gRPC methods:
-    - ```HashData``` — computes a cryptographic hash over arbitrary input.
-    - ```SignCertificate``` — issues an X.509 certificate from a CSR.
-- ```CryptoGrpcDev``` — a development/diagnostics service that is not intended for production application use. It exposes:
-    - ```Benchmark``` — runs a dedicated benchmark in the Crypto Broker server.
-    - ```FakeEndpoint``` — a minimal endpoint used for testing and connectivity checks.
+- `CryptoGrpc` — the production service used by client applications. It exposes the cryptographic operations as gRPC methods:
+    - `HashData` — computes a cryptographic hash over arbitrary input.
+    - `SignCertificate` — issues an X.509 certificate from a CSR.
+- `CryptoGrpcDev` — a development/diagnostics service that is not intended for production application use. It exposes:
+    - `Benchmark` — runs a dedicated benchmark in the Crypto Broker server.
+    - `FakeEndpoint` — a minimal endpoint used for testing and connectivity checks.
 
-The split keeps the production cryptographic surface (```CryptoGrpc```) separate from the development-only endpoints (```CryptoGrpcDev```), which can be disabled in production deployments.
+The split keeps the production cryptographic surface (`CryptoGrpc`) separate from the development-only endpoints (`CryptoGrpcDev`), which can be disabled in production deployments.
 
 ---
 
@@ -42,7 +42,7 @@ The functions equally return a Struct containing API-specific values as well as 
 
 ### Production APIs (`CryptoGrpc`)
 
-These APIs are provided by the production service ```CryptoGrpc``` and expose the cryptographic operations used by client applications.
+These APIs are provided by the production service `CryptoGrpc` and expose the cryptographic operations used by client applications.
 
 #### `HashData`
 
@@ -103,11 +103,11 @@ All other values like validity, signature algorithm etc. can be extracted from t
 
 ### Development APIs (`CryptoGrpcDev`)
 
-These APIs are provided by the development/diagnostics service ```CryptoGrpcDev```. They are not intended for production application use and can be disabled in production deployments.
+These APIs are provided by the development/diagnostics service `CryptoGrpcDev`. They are not intended for production application use and can be disabled in production deployments.
 
 #### `BenchmarkData`
 
-This API allows clients to run a dedicated benchmark in the Crypto Broker server. It is provided by the development service ```CryptoGrpcDev``` via the ```Benchmark``` method.
+This API allows clients to run a dedicated benchmark in the Crypto Broker server. It is provided by the development service `CryptoGrpcDev` via the `Benchmark` method.
 
 ##### `BenchmarkData` Input
 
