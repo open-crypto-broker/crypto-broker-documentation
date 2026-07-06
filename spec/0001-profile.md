@@ -203,8 +203,8 @@ As defined in [RFC 5280 Section 4.2.1.2](https://www.rfc-editor.org/rfc/rfc5280#
 - Rules:
     - The value must be derived from the public key using one of the methods described in RFC 5280 Section 4.2.1.2 (typically a SHA-1 hash of the BIT STRING value of the subjectPublicKey).
     - The extension must be marked as non-critical.
--    - For CA certificates (`Basic Constraints: CA=TRUE`), this extension must be included.
--    - For end-entity certificates (`Basic Constraints: CA=FALSE`), this extension should be included.
+    - For CA certificates (`Basic Constraints: CA=TRUE`), this extension must be included.
+    - For end-entity certificates (`Basic Constraints: CA=FALSE`), this extension should be included.
 - Examples:
     - `Subject Key Identifier: A3:12:4E:9C:78:B0:5D:FA:21:6E:33:8A:C7:D4:2B:90:1F:55:E8:3C`
 
@@ -230,9 +230,9 @@ The generated certificate must include a public key that meets the key length an
 - Value type: `Object (Algorithm, Key Size)`
 - Source:
     - Provided in the CSR
--    - Validation: Profile field `Key Constraints`
--    - `MinKeySize`: `Integer`
--    - `MaxKeySize`: `Integer`
+    - Validation: Profile field `Key Constraints`
+    - `MinKeySize`: `Integer`
+    - `MaxKeySize`: `Integer`
 - Keys and allowed values:
     - `Algorithm`: Public key algorithm name as a `String`
     - `Key Size`: `Integer`
