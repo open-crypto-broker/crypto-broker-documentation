@@ -98,7 +98,7 @@ Defines settings for signing X.509 certificate signing requests (CSR).
 
 > Note: If `CA` is `false` and `PathLenConstraint` is configured, the implementation shall throw an error.
 
-## API: `EncryptData`
+## API: `EncryptData` and `DecryptData`
 
 Defines settings for symmetric encryption and decryption. This section governs both the `EncryptData` and `DecryptData` APIs, which share the same algorithm and key constraints.
 
