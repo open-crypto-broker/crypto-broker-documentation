@@ -6,6 +6,7 @@ The Crypto Broker server provides remote cryptographic operations over gRPC, inc
 
 - Hashing arbitrary binary data.
 - Signing X.509 certificates based on Certificate Signing Requests (CSRs).
+- Encrypting and decrypting arbitrary binary data using authenticated symmetric encryption.
 
 This specification describes the observable behavior and processing contract of the Crypto Broker server: the services it exposes, how it processes and validates requests, the security guarantees it provides, and how it can be operated and observed.
 
@@ -39,6 +40,8 @@ The production service is always available and exposes the cryptographic operati
 
 - `HashData` — computes a cryptographic hash over arbitrary input using the algorithm defined in the selected profile.
 - `SignCertificate` — issues an X.509 certificate from a CSR using the credentials and constraints defined in the selected profile.
+- `EncryptData` — encrypts arbitrary input using the authenticated symmetric encryption algorithm defined in the selected profile.
+- `DecryptData` — decrypts data previously produced by `EncryptData` using the selected profile.
 
 ### Development service (`CryptoGrpcDev`)
 
@@ -101,6 +104,11 @@ Depending on the requested operation, the server validates that:
     - The signature algorithm in the profile is compatible with the provided key.
     - The subject's public key and the issuer's private key satisfy the key-size constraints defined in the profile.
     - The requested certificate validity lies within the boundaries permitted by the profile.
+- For `EncryptData` and `DecryptData`:
+    - The supplied key source matches the profile: raw key material for caller-managed profiles (no key storage backend), or a key identifier for broker-managed profiles.
+    - The supplied or referenced key satisfies the key-size constraints defined in the profile.
+    - Any caller-supplied nonce is only accepted when the profile permits it.
+    - For `DecryptData`, the ciphertext and authentication tag are verified against the supplied cipher parameters.
 
 Requests that violate any of these rules are rejected with a verbose error identifying the failed check.
 
@@ -121,6 +129,10 @@ The following algorithms are supported by the server. A given request may only u
 
 - Signature algorithms: RSA, ECDSA
 - Hash algorithms used for signing: SHA-256, SHA-384, SHA-512
+
+### Encryption (`EncryptData` / `DecryptData`)
+
+- Authenticated symmetric encryption: AES-GCM
 
 ---
 
@@ -187,10 +199,10 @@ Error reporting is verbose and stage-aware: the client is told which part of the
     - The production service and the health service are registered. In a development environment, the development service is additionally registered.
 
 1. **Requests**
-    - A client sends a `HashData` or `SignCertificate` request via gRPC.
+    - A client sends a `HashData`, `SignCertificate`, `EncryptData` or `DecryptData` request via gRPC.
     - The server enforces message-size limits, retrieves the referenced profile and validates the input against it.
     - The server selects the cryptographic algorithm and parameters based on the profile and performs the operation.
-    - The server returns the response (hash value or signed certificate) together with metadata, or a verbose error.
+    - The server returns the response (hash value, signed certificate, ciphertext or plaintext) together with metadata, or a verbose error.
 
 1. **Error handling**
     - Errors are returned as described in [Error Handling](#error-handling).

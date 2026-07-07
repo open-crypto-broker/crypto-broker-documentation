@@ -32,6 +32,7 @@ The `Name` field is a string that uniquely identifies the profile. It is used to
 | Field | Type | Description |
 | --- | --- | --- |
 | `CryptoLibrary` | String | The underlying cryptographic library to use (e.g., `openssl` or `native`). |
+| `KMS` | String | *(Optional)* Key storage backend used to manage key material for this profile (e.g., `openbao`). If unset, the profile is caller-managed and the broker keeps no key material; if set, the profile is broker-managed and keys are referenced by identifier. See the [Key Storage Backend ADR](../adr/overall/0011-key-storage-backend.md). |
 
 ## API: `HashData`
 
@@ -96,6 +97,28 @@ Defines settings for signing X.509 certificate signing requests (CSR).
 | `PathLenConstraint` | Int | *(Optional)* Specifies the maximum number of intermediate certificates that may follow this certificate in a valid certification path. Only applicable if `CA` is `true`. |
 
 > Note: If `CA` is `false` and `PathLenConstraint` is configured, the implementation shall throw an error.
+
+## API: `EncryptData`
+
+Defines settings for symmetric encryption and decryption. This section governs both the `EncryptData` and `DecryptData` APIs, which share the same algorithm and key constraints.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `EncryptAlg` | String | The authenticated encryption algorithm to use (e.g., `aes-gcm`). |
+| `KeyConstraints` | Map | Defines the allowed key size constraints for the encryption key. |
+| `NonceStrategy` | String | How the nonce is obtained: `random` (broker-generated) or `user-provided` (supplied via the API). |
+| `TagLength` | Int | Length of the authentication tag in bits (e.g., `128`). |
+
+> Note: Whether a key is referenced by identifier or supplied inline is determined by the `KMS` setting of the profile (see [`Settings`](#settings)). A profile without a `KMS` setting requires the caller to supply raw key material; a profile with a `KMS` setting expects a key identifier.
+
+### `KeyConstraints`
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `MinKeySize` | Int | Minimum allowable key size in bits. |
+| `MaxKeySize` | Int | Maximum allowable key size in bits. |
+
+> Note: For caller-managed profiles (no `KMS`), the broker validates the length of the supplied raw key against these constraints. For broker-managed profiles (with `KMS`), the referenced key must satisfy these constraints.
 
 ---
 
