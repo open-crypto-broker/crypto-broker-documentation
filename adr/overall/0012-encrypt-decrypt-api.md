@@ -1,0 +1,163 @@
+---
+status: proposed
+date: 2026-06-10
+decision-makers: Stephan Andre, Maximilian Lenkeit, Anselme Tueno
+consulted: Robin Winzler, Miyana Stange, Pawel Chmielewski, Damian Jankowski
+---
+
+# Encrypt/Decrypt API for the Crypto Broker Server
+
+## Context and Problem Statement
+
+The Crypto Broker Server currently supports `HashData` and `SignCertificate` operations via its gRPC interface.
+To provide symmetric encryption capabilities (e.g. AES-GCM), new `EncryptData` and `DecryptData` RPCs must be added.
+Symmetric encryption requires careful handling of keys, nonces, and additional authenticated data (AAD).
+The question is how much control the caller should have over these parameters versus how much the server should manage internally.
+
+This is directly coupled to whether a key storage backend (KMS) is configured for the active profile, as defined in [ADR 0011](0011-key-storage-backend.md):
+
+* **No KMS in the profile (caller-managed):** the Crypto Broker cannot store anything. The application must supply the key material inline (a raw key) together with the plaintext, and is responsible for any additional data (nonce/AAD). The broker acts as a validated, algorithm-specific wrapper.
+* **KMS in the profile (broker-managed):** the application references previously generated/imported key material via an identifier; the Crypto Broker resolves the key from the KMS and can manage additional parameters (e.g. nonce, AAD) itself, enabling a more agnostic call.
+
+Because the same RPC must serve both situations, the request needs a key field that can carry **either** a reference to a managed key **or** raw key material. A plain `key-id` name no longer fits, since in the no-KMS case the value is the key itself rather than an identifier. We therefore model this as a `KeySource` (see [Decision Outcome](#decision-outcome)).
+
+## Decision Drivers
+
+* Users need control over encryption inputs (key selection, nonces, associated data)
+* The API must work both with and without a KMS, as determined by the profile (caller-managed vs. broker-managed)
+* The key input must represent either a managed key reference or inline raw key material under a single, clearly named field
+* The Crypto Broker and its profiles should enforce security requirements (e.g. minimum key length)
+* The API must integrate with the pluggable key storage backend defined in [ADR 0011](0011-key-storage-backend.md)
+* Crypto agility must be maintained through the profile mechanism
+* The API should extend the existing gRPC service (`CryptoGrpc`) consistently
+
+## Considered Options
+
+* Agnostic API (server manages everything)
+* Explicit API with user-controlled parameters
+* Hybrid approach
+
+## Decision Outcome
+
+Chosen option: "Explicit API with user-controlled parameters", because it gives users full control over encryption inputs while the Crypto Broker and profile perform requirement validation checks.
+
+The API follows the pattern:
+
+```text
+encryptData(profile, key-source, plaintext, [encrypt-metadata]) => ciphertext + cipher-metadata
+decryptData(profile, key-source, ciphertext, cipher-metadata) => plaintext
+```
+
+* `key-source` is a `oneof` that carries **either** a `key_id` (when a KMS is configured in the profile) **or** a `raw_key` (when no KMS is configured). This replaces the previous `key-id` naming, which only described the KMS-backed case.
+* `encrypt-metadata` is an optional input structure for caller-supplied parameters such as nonce and AAD. When omitted, the Crypto Broker generates/derives them according to the profile.
+* `cipher-metadata` is returned alongside the ciphertext and carries the parameters required for decryption (e.g. the nonce actually used, AAD, tag), so the caller can pass it back unchanged to `decryptData`.
+
+Which `KeySource` variant is valid is governed by the profile: a profile **without** a KMS requires `raw_key`, a profile **with** a KMS expects `key_id`.
+
+### Consequences
+
+* Good, because users have full control over key selection and additional inputs (nonces, AAD)
+* Good, because a single `KeySource` field cleanly covers both the no-KMS (raw key) and KMS (key-id) cases
+* Good, because returning `cipher-metadata` frees callers from having to track nonce/AAD/tag handling themselves
+* Good, because the Crypto Broker performs requirement checks via profiles (e.g. validating key length for raw keys)
+* Good, because it supports both key-id references (resolved via key storage backend) and inline raw keys
+* Bad, because the API is not fully agnostic — it essentially acts as a validated wrapper for the underlying algorithm (e.g. AES-GCM)
+* Bad, because callers must understand nonce requirements if they choose to provide their own
+
+### Confirmation
+
+Confirmed by the stakeholders on 2026-06-17.
+
+## Pros and Cons of the Options
+
+### Agnostic API (server manages everything)
+
+The server manages all cryptographic details internally. The caller only provides a profile name and plaintext.
+Nonces are generated by the server and embedded in the ciphertext. Keys are selected automatically based on the profile.
+
+API: `encrypt(profile, plaintext) → ciphertext`
+
+* Good, because the caller has minimal responsibility — no cryptographic knowledge required
+* Good, because nonce reuse is prevented entirely by server-side generation
+* Good, because it provides a truly agnostic interface (callers don't know the algorithm)
+* Bad, because it limits flexibility — callers cannot provide their own nonces or AAD
+* Bad, because key selection is implicit and opaque to the caller
+* Bad, because it may not fit use cases where the application needs to control associated data
+
+### Explicit API with user-controlled parameters
+
+The caller provides the profile, a `KeySource` (a key-id when a KMS is configured, or raw key material when it is not), plaintext, and optionally an `encrypt-metadata` structure carrying, e.g. nonce and additional authenticated data.
+The Crypto Broker validates inputs against the profile constraints before performing the operation and returns the ciphertext together with a `cipher-metadata` structure needed for decryption.
+
+API: `encryptData(profile, key-source, plaintext, [encrypt-metadata]) => ciphertext + cipher-metadata`
+
+* Good, because users have full control over key selection and additional parameters
+* Good, because the `KeySource` field handles both the no-KMS (raw key) and KMS (key-id) cases without separate RPCs
+* Good, because the profile enforces security requirements (e.g. minimum key length for raw keys)
+* Good, because returning `cipher-metadata` makes nonce/AAD/tag handling explicit and round-trippable
+* Good, because additional authenticated data (AAD) enables authenticated encryption use cases
+* Bad, because the API is not fully agnostic — it is essentially a wrapper for the underlying algorithm
+* Bad, because callers providing their own nonces bear responsibility for uniqueness
+* Bad, because more parameters increase API complexity
+
+### Hybrid approach
+
+The server provides sensible defaults (auto-generated nonces, profile-bound key selection) but allows callers to override with explicit parameters when needed.
+
+API: `encryptData(profile, [key-id], plaintext, [nonce], [aad]) => ciphertext`
+
+* Good, because it balances simplicity for basic use cases with flexibility for advanced ones
+* Good, because defaults prevent common mistakes (nonce reuse)
+* Neutral, because it is harder to document clearly — two modes of operation
+* Bad, because implicit behavior can surprise callers when defaults change
+* Bad, because testing must cover both explicit and default code paths
+
+## Profile Extension
+
+The existing profile YAML structure is extended with an `EncryptData` section to define encryption constraints.
+The optional `KMS` setting determines which `KeySource` variant is expected: when absent, the caller must supply a `raw_key`; when present, the caller references a managed key via `key_id`.
+
+```yaml
+- Name: Default
+  Settings:
+    CryptoLibrary: native
+    KMS: openbao                 # NEW — optional; if unset, no key storage (caller-managed raw keys)
+  API:
+    EncryptData:                    # NEW
+      EncryptAlg: aes-gcm
+      KeyConstraints:
+        MinKeySize: 128
+        MaxKeySize: 256
+      NonceStrategy: random        # random | user-provided
+      TagLength: 128
+```
+
+The Crypto Broker uses this profile to validate incoming requests:
+
+* Does the `KeySource` match the profile? (`raw_key` required when no KMS is set, `key_id` when a KMS is set)
+* Is the referenced/supplied key long enough? (especially relevant for raw keys)
+* Is the algorithm allowed by the profile?
+* Are nonce requirements satisfied?
+
+## gRPC Service Extension
+
+The existing `CryptoGrpc` service is extended with `EncryptData` and `DecryptData` RPCs.
+The request messages include the profile name, a `KeySource`, the plaintext/ciphertext, and an optional `encrypt-metadata` / required `cipher-metadata` structure for nonce, AAD, and tag.
+The `KeySource` is modeled as a `oneof` so exactly one variant is set per request:
+
+```proto
+message KeySource {
+  oneof source {
+    string key_id  = 1;  // KMS-backed: reference to a managed key (profile has a KMS)
+    bytes  raw_key = 2;  // caller-managed: inline key material (profile has no KMS)
+  }
+}
+```
+
+The response messages return the resulting ciphertext/plaintext, the `cipher-metadata` needed for decryption, and echo back the `KeySource` reference used (the `key_id`; raw key material is never echoed back).
+
+This extends the service definition alongside the existing `HashData` and `SignCertificate` RPCs.
+
+## More Information
+
+This ADR depends on [ADR 0011 — Key Storage Backend](0011-key-storage-backend.md), which defines how keys are managed and retrieved by the Crypto Broker Server.
