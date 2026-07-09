@@ -213,7 +213,9 @@ All other languages need to include the `health.proto` file in the protobuf comp
 
 ## `KeySource` message
 
-The `keySource` carries the key material for the `EncryptData` and `DecryptData` APIs. Exactly one of the two fields must be set. Which variant is valid is determined by the profile: a profile without a key storage backend (`KMS`) requires `rawKey`, while a profile with a `KMS` expects `keyId`.
+The `keySource` carries the key material for the `EncryptData` and `DecryptData` APIs.
+Exactly one of the two fields must be set.
+Which variant is valid is determined by the profile: a profile without a key storage backend (`KMS`) requires `rawKey`, while a profile with a `KMS` expects `keyId`.
 
 | Variable | Type | Description |
 | --- | --- | --- |
@@ -231,7 +233,10 @@ Optional caller-supplied encryption parameters for the `EncryptData` API. When o
 
 ## `cipherMetadata` message
 
-Metadata produced by `EncryptData` and returned alongside the ciphertext. It encapsulates everything the caller may need besides the ciphertext itself. Each field is optional and populated according to the flow: `keyId` is echoed for KMS-backed profiles, while `nonce`, `aad` and `tag` are returned only when the caller must retain them (caller-managed flows, or the hybrid flow where the broker generated the nonce). In fully KMS-managed flows the broker stores these itself, so only the `keyId` is returned.
+Metadata produced by `EncryptData` and returned alongside the ciphertext.
+It encapsulates everything the caller may need besides the ciphertext itself.
+Each field is optional and populated according to the flow: `keyId` is echoed for KMS-backed profiles, while `nonce`, `aad` and `tag` are returned only when the caller must retain them (caller-managed flows, or the hybrid flow where the broker generated the nonce).
+In fully KMS-managed flows the broker stores these itself, so only the `keyId` is returned.
 
 | Variable | Type | Description |
 | --- | --- | --- |
@@ -242,7 +247,9 @@ Metadata produced by `EncryptData` and returned alongside the ciphertext. It enc
 
 ## `decryptMetadata` message
 
-Optional caller-supplied decryption parameters for the `DecryptData` API, symmetric to [`encryptMetadata`](#encryptmetadata-message). In KMS-managed flows the Crypto Broker resolves the required parameters itself, so the caller may omit them. In caller-managed or hybrid flows the caller provides them, typically by echoing back the values from the `cipherMetadata` returned by `EncryptData`.
+Optional caller-supplied decryption parameters for the `DecryptData` API, symmetric to [`encryptMetadata`](#encryptmetadata-message).
+In KMS-managed flows the Crypto Broker resolves the required parameters itself, so the caller may omit them.
+In caller-managed or hybrid flows the caller provides them, typically by echoing back the values from the `cipherMetadata` returned by `EncryptData`.
 
 | Variable | Type | Description |
 | --- | --- | --- |
