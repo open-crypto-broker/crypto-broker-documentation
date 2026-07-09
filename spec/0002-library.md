@@ -83,7 +83,7 @@ The `SignCertificate` API function allows clients to request a certificate by pr
 | `validNotBefore` | Uint64 | *(Optional)* Validity start as a Unix timestamp (seconds since epoch). |
 | `validNotAfter` | Uint64 | *(Optional)* Validity end as a Unix timestamp (seconds since epoch). |
 | `subject` | String | *(Optional)* Custom Subject Distinguished Name provided by the application. |
-| `crlDistributionPoints` | List of Strings | *(Optional)* Custom CRL Distribution Point URLs provided by the application. |
+| `crlDistributionPoints` | List of Strings | *(Optional)* Custom CRL Distribution Point URLs provided by the application. Each URL must comply with [RFC 3986](https://datatracker.ietf.org/doc/html/rfc3986) |
 | `outputFormat` | Enum | *(Optional)* Output encoding of the signed certificate: `DER` (default) or `PEM`. |
 | `metadata` | Map | *(Optional)* Metadata about the Crypto Broker request/response. |
 
