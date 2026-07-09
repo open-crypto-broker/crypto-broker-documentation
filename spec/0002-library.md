@@ -6,6 +6,8 @@ The Crypto Broker service provides remote cryptographic operations over gRPC, in
 
 - Hashing arbitrary binary data: `HashData` API
 - Generating X.509 certificates based on Certificate Signing Requests (CSRs): `SignCertificate` API
+- Encrypting arbitrary binary data: `EncryptData` API
+- Decrypting previously encrypted data: `DecryptData` API
 
 This specification describes the behavior and message formats of the API endpoints for clients across any programming language. The library does not perform cryptographic operations locally. It delegates all such tasks to the Crypto Broker.
 
@@ -26,6 +28,8 @@ The Crypto Broker exposes two separate gRPC services, defined in `messages.proto
 - `CryptoGrpc` — the production service used by client applications. It exposes the cryptographic operations as gRPC methods:
     - `HashData` — computes a cryptographic hash over arbitrary input.
     - `SignCertificate` — issues an X.509 certificate from a CSR.
+    - `EncryptData` — encrypts arbitrary input using authenticated symmetric encryption.
+    - `DecryptData` — decrypts data previously produced by `EncryptData`.
 - `CryptoGrpcDev` — a development/diagnostics service that is not intended for production application use. It exposes:
     - `Benchmark` — runs a dedicated benchmark in the Crypto Broker server.
     - `FakeEndpoint` — a minimal endpoint used for testing and connectivity checks.
@@ -99,6 +103,58 @@ The `SignCertificate` API returns a response body `SignCertificateResponse`, fro
 
 All other values like validity, signature algorithm etc. can be extracted from the certificate itself.
 
+#### `EncryptData`
+
+The `EncryptData` API function allows clients to encrypt arbitrary data using an authenticated symmetric encryption algorithm specified in a profile. The client-side function maps directly to the `EncryptData` RPC method of the `CryptoGrpc` gRPC service.
+
+The encryption key is supplied via a `keySource` (see [`KeySource` message](#keysource-message)). Depending on the profile, the caller either references a key managed by a key storage backend (`keyId`) or supplies raw key material inline (`rawKey`). Optional encryption parameters such as the nonce and additional authenticated data (AAD) can be supplied via `encryptMetadata`; when omitted, the Crypto Broker generates or derives them according to the profile.
+
+##### `EncryptData` Input
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `profile` | String | Name of the profile (e.g., `Default`, `PCI-DSS`). |
+| `keySource` | Map | Key material to use, given as a [`KeySource`](#keysource-message). Either a `keyId` (KMS-backed) or `rawKey` (caller-managed). |
+| `plaintext` | Bytes | Arbitrary input to be encrypted. |
+| `encryptMetadata` | Map | *(Optional)* Caller-supplied encryption parameters (see [`encryptMetadata` message](#encryptmetadata-message)), e.g. nonce and AAD. |
+| `metadata` | Map | *(Optional)* Metadata about the Crypto Broker request/response. |
+
+##### `EncryptData` Output
+
+The `EncryptData` API returns a response body `EncryptDataResponse`, from which the following values can be extracted.
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `ciphertext` | Bytes | The encrypted data. |
+| `cipherMetadata` | Map | Parameters required for decryption (see [`cipherMetadata` message](#ciphermetadata-message)), e.g. the nonce actually used, AAD and authentication tag. Passed back unchanged to `DecryptData`. |
+| `keyId` | String | The key identifier that was used, echoed back for KMS-backed profiles. Raw key material is never returned. |
+| `metadata` | Map | Metadata about the Crypto Broker request/response. |
+
+#### `DecryptData`
+
+The `DecryptData` API function allows clients to decrypt data previously produced by `EncryptData`. The client-side function maps directly to the `DecryptData` RPC method of the `CryptoGrpc` gRPC service.
+
+The caller provides the same `keySource` variant expected by the profile together with the `cipherMetadata` returned by `EncryptData`.
+
+##### `DecryptData` Input
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `profile` | String | Name of the profile (e.g., `Default`, `PCI-DSS`). |
+| `keySource` | Map | Key material to use, given as a [`KeySource`](#keysource-message). Either a `keyId` (KMS-backed) or `rawKey` (caller-managed). |
+| `ciphertext` | Bytes | The encrypted data to be decrypted. |
+| `cipherMetadata` | Map | Parameters required for decryption (see [`cipherMetadata` message](#ciphermetadata-message)), as returned by `EncryptData`. |
+| `metadata` | Map | *(Optional)* Metadata about the Crypto Broker request/response. |
+
+##### `DecryptData` Output
+
+The `DecryptData` API returns a response body `DecryptDataResponse`, from which the following values can be extracted.
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `plaintext` | Bytes | The decrypted data. |
+| `metadata` | Map | Metadata about the Crypto Broker request/response. |
+
 ---
 
 ### Development APIs (`CryptoGrpcDev`)
@@ -156,6 +212,36 @@ All other languages need to include the `health.proto` file in the protobuf comp
 
 ---
 
+## `KeySource` message
+
+The `keySource` carries the key material for the `EncryptData` and `DecryptData` APIs. Exactly one of the two fields must be set. Which variant is valid is determined by the profile: a profile without a key storage backend (`KMS`) requires `rawKey`, while a profile with a `KMS` expects `keyId`.
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `keyId` | String | Reference to a key managed by the key storage backend. Set for broker-managed (KMS-backed) profiles. |
+| `rawKey` | Bytes | Inline key material supplied by the caller. Set for caller-managed profiles without a `KMS`. |
+
+## `encryptMetadata` message
+
+Optional caller-supplied encryption parameters for the `EncryptData` API. When omitted, the Crypto Broker generates or derives these values according to the profile.
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `nonce` | Bytes | *(Optional)* Nonce to use for encryption. Only permitted when the profile's `NonceStrategy` is `user-provided`. |
+| `aad` | Bytes | *(Optional)* Additional authenticated data to bind to the ciphertext. |
+
+## `cipherMetadata` message
+
+Parameters produced by `EncryptData` and required as input to `DecryptData`. The caller passes this structure back unchanged.
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `nonce` | Bytes | The nonce actually used for encryption. |
+| `aad` | Bytes | *(Optional)* The additional authenticated data bound to the ciphertext. |
+| `tag` | Bytes | The authentication tag produced by the authenticated encryption algorithm. |
+
+---
+
 ## Examples
 
 ### Go
@@ -197,3 +283,9 @@ On the client side, errors may be caused in the following scenarios:
     - The public key given in the CA certificate does not match the private key.
     - The requested certificate validity is out of the permitted profile boundaries.
     - The length of the issuer's private key or the subject's public key is out of the permitted profile boundaries.
+- EncryptData / DecryptData:
+    - The provided `keySource` variant does not match the profile (e.g. `rawKey` supplied for a profile that expects a `keyId`, or vice versa).
+    - The length of the supplied or referenced key is out of the permitted profile boundaries.
+    - A nonce is supplied although the profile's `NonceStrategy` does not allow user-provided nonces.
+    - The referenced key identifier cannot be resolved by the key storage backend.
+    - The ciphertext or authentication tag fails verification during decryption.
