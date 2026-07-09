@@ -126,15 +126,14 @@ The `EncryptData` API returns a response body `EncryptDataResponse`, from which 
 | Variable | Type | Description |
 | --- | --- | --- |
 | `ciphertext` | Bytes | The encrypted data. |
-| `cipherMetadata` | Map | Parameters required for decryption (see [`cipherMetadata` message](#ciphermetadata-message)), e.g. the nonce actually used, AAD and authentication tag. Passed back unchanged to `DecryptData`. |
-| `keyId` | String | The key identifier that was used, echoed back for KMS-backed profiles. Raw key material is never returned. |
+| `cipherMetadata` | Map | Metadata accompanying the ciphertext (see [`cipherMetadata` message](#ciphermetadata-message)). Encapsulates the key identifier used and, where the caller must retain them, the nonce, AAD and authentication tag needed to decrypt later. |
 | `metadata` | Map | Metadata about the Crypto Broker request/response. |
 
 #### `DecryptData`
 
 The `DecryptData` API function allows clients to decrypt data previously produced by `EncryptData`. The client-side function maps directly to the `DecryptData` RPC method of the `CryptoGrpc` gRPC service.
 
-The caller provides the same `keySource` variant expected by the profile together with the `cipherMetadata` returned by `EncryptData`.
+The caller provides the same `keySource` variant expected by the profile. For caller-managed and hybrid flows, the caller also supplies the decryption parameters via `decryptMetadata`, typically by echoing back the values from the `cipherMetadata` returned by `EncryptData`. For fully KMS-managed flows, the Crypto Broker resolves these parameters itself and `decryptMetadata` may be omitted.
 
 ##### `DecryptData` Input
 
@@ -143,7 +142,7 @@ The caller provides the same `keySource` variant expected by the profile togethe
 | `profile` | String | Name of the profile (e.g., `Default`, `PCI-DSS`). |
 | `keySource` | Map | Key material to use, given as a [`KeySource`](#keysource-message). Either a `keyId` (KMS-backed) or `rawKey` (caller-managed). |
 | `ciphertext` | Bytes | The encrypted data to be decrypted. |
-| `cipherMetadata` | Map | Parameters required for decryption (see [`cipherMetadata` message](#ciphermetadata-message)), as returned by `EncryptData`. |
+| `decryptMetadata` | Map | *(Optional)* Caller-supplied decryption parameters (see [`decryptMetadata` message](#decryptmetadata-message)), e.g. nonce, AAD and authentication tag. |
 | `metadata` | Map | *(Optional)* Metadata about the Crypto Broker request/response. |
 
 ##### `DecryptData` Output
@@ -232,13 +231,24 @@ Optional caller-supplied encryption parameters for the `EncryptData` API. When o
 
 ## `cipherMetadata` message
 
-Parameters produced by `EncryptData` and required as input to `DecryptData`. The caller passes this structure back unchanged.
+Metadata produced by `EncryptData` and returned alongside the ciphertext. It encapsulates everything the caller may need besides the ciphertext itself. Each field is optional and populated according to the flow: `keyId` is echoed for KMS-backed profiles, while `nonce`, `aad` and `tag` are returned only when the caller must retain them (caller-managed flows, or the hybrid flow where the broker generated the nonce). In fully KMS-managed flows the broker stores these itself, so only the `keyId` is returned.
 
 | Variable | Type | Description |
 | --- | --- | --- |
-| `nonce` | Bytes | The nonce actually used for encryption. |
+| `keyId` | String | *(Optional)* The key identifier that was used, echoed back for KMS-backed profiles. Raw key material is never returned. |
+| `nonce` | Bytes | *(Optional)* The nonce actually used for encryption. |
 | `aad` | Bytes | *(Optional)* The additional authenticated data bound to the ciphertext. |
-| `tag` | Bytes | The authentication tag produced by the authenticated encryption algorithm. |
+| `tag` | Bytes | *(Optional)* The authentication tag produced by the authenticated encryption algorithm. |
+
+## `decryptMetadata` message
+
+Optional caller-supplied decryption parameters for the `DecryptData` API, symmetric to [`encryptMetadata`](#encryptmetadata-message). In KMS-managed flows the Crypto Broker resolves the required parameters itself, so the caller may omit them. In caller-managed or hybrid flows the caller provides them, typically by echoing back the values from the `cipherMetadata` returned by `EncryptData`.
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `nonce` | Bytes | *(Optional)* Nonce to use for decryption. |
+| `aad` | Bytes | *(Optional)* Additional authenticated data bound to the ciphertext. |
+| `tag` | Bytes | *(Optional)* The authentication tag to verify during decryption. |
 
 ---
 
