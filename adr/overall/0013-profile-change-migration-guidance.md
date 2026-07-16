@@ -78,9 +78,13 @@ The combination of **Option A (immutable profile names as a contract)** and **Op
 * Option A guarantees that the algorithms behind a given profile name never change underneath a running application; algorithm evolution happens by adding new named profiles.
 * Option B ensures that even stored artifacts (hashes, certificates, ciphertext) remain verifiable and usable, because each carries the profile, operation and concrete algorithm that produced it.
 
-Of the two, **Option B (the self-describing storage format) should be adopted first — ideally before a second profile is ever needed.** It is the foundation: Option A defines the *policy* (a profile name is an immutable contract), but Option B is the *mechanism* that makes that policy migratable in practice. An application that tags its stored data from day one can absorb any future profile change through incremental migration; an application that stored bare values with no algorithm tag is forced into a costly, all-at-once re-computation the first time an algorithm changes — which for large datasets may be infeasible.
+Of the two, **Option B (the self-describing storage format) should be adopted first — ideally before a second profile is ever needed.**
+It is the foundation:
+Option A defines the *policy* (a profile name is an immutable contract), but Option B is the *mechanism* that makes that policy migratable in practice.
+An application that tags its stored data from day one can absorb any future profile change through incremental migration; an application that stored bare values with no algorithm tag is forced into a costly, all-at-once re-computation the first time an algorithm changes — which for large datasets may be infeasible.
 
-Option C (versioning + discovery) and Option E (deprecation metadata) are useful complements for runtime detection — Option E in particular lets the profile owner actively tell applications to migrate, delivered as a warning on every response rather than requiring the client to poll a discovery endpoint. Option D (change management) is advisable regardless of the technical option chosen, as it reinforces the downgrade-attack mitigations discussed in the [Configuration Options ADR](0008-configuration-options.md) and is a prerequisite for safely using Option E's `SupersededBy` pointer.
+Option C (versioning + discovery) and Option E (deprecation metadata) are useful complements for runtime detection — Option E in particular lets the profile owner actively tell applications to migrate, delivered as a warning on every response rather than requiring the client to poll a discovery endpoint.
+Option D (change management) is advisable regardless of the technical option chosen, as it reinforces the downgrade-attack mitigations discussed in the [Configuration Options ADR](0008-configuration-options.md) and is a prerequisite for safely using Option E's `SupersededBy` pointer.
 
 ### Consequences
 
