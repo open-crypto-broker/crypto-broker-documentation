@@ -38,11 +38,24 @@ Problem question: How should profile changes be governed and communicated so tha
 
 ## Considered Options
 
-* **Option A — Immutable profile names as a contract + versioned profiles**: A profile name is treated as an immutable contract for the algorithms it selects. Algorithms are never changed in place; instead a new profile with a new name is introduced (e.g. `Default-2026`, or a standard-based name such as `FIPS-140-3-256bit`). Old and new profiles coexist for a defined deprecation window so applications migrate on their own schedule.
-* **Option B — Self-describing storage format**: Every stored cryptographic artifact is persisted together with a descriptor of how it was produced: the **profile**, the **operation/API** that produced it (`HashData`, `SignCertificate`, `EncryptData`) and the **concrete algorithm** that was actually used, e.g. `{ value, profile: "Default-2025", operation: "HashData", algorithm: "sha3-512" }`. Recording the concrete algorithm unconditionally is what removes all ambiguity: the record can be verified, decrypted or even migrated to a completely different crypto service or library without any access to the original `Profiles.yaml`. Applications verify, decrypt or compare against the *stored* descriptor rather than an assumed "current" one, so records produced under different profiles coexist indefinitely in the same store. To make correct usage the path of least resistance, the Crypto Broker returns this descriptor in the gRPC response (today `HashDataResponse` already returns `hashAlgorithm`, and X.509 certificates embed their signature algorithm), so the application can store it verbatim rather than reconstructing it. This self-describing format is the **enabling primitive** for any later migration: without it, changing an algorithm forces a big-bang re-computation of all existing data; with it, migration becomes incremental and optional.
-* **Option C — Explicit profile `Version` field + discovery API**: Each profile carries a `Version` field, and a read-only discovery ("list profiles") API lets clients read the profiles and their versions/algorithms at runtime, so a client can detect a change and fail loudly instead of silently mismatching.
-* **Option D — Change-management and audit controls only**: Keep the current model but require review, versioned storage, and audit logging of every change to `Profiles.yaml`, relying on process rather than technical guarantees.
-* **Option E — Profile deprecation metadata**: A profile in `Profiles.yaml` carries optional metadata that marks it as outdated and names its successor, so the profile-responsible person can actively signal that consumers should migrate. The Crypto Broker surfaces this signal as a **deprecation warning attached to every response** produced with a deprecated profile, so applications are informed in-band without polling a separate endpoint. Example fields:
+* **Option A — Immutable profile names as a contract + versioned profiles**:
+A profile name is treated as an immutable contract for the algorithms it selects.
+Algorithms are never changed in place; instead a new profile with a new name is introduced (e.g. `Default-2026`, or a standard-based name such as `FIPS-140-3-256bit`).
+Old and new profiles coexist for a defined deprecation window so applications migrate on their own schedule.
+* **Option B — Self-describing storage format**:
+Every stored cryptographic artifact is persisted together with a descriptor of how it was produced: the **profile**, the **operation/API** that produced it (`HashData`, `SignCertificate`, `EncryptData`) and the **concrete algorithm** that was actually used, e.g. `{ value, profile: "Default-2025", operation: "HashData", algorithm: "sha3-512" }`.
+Recording the concrete algorithm unconditionally is what removes all ambiguity: the record can be verified, decrypted or even migrated to a completely different crypto service or library without any access to the original `Profiles.yaml`.
+Applications verify, decrypt or compare against the *stored* descriptor rather than an assumed "current" one, so records produced under different profiles coexist indefinitely in the same store.
+To make correct usage the path of least resistance, the Crypto Broker returns this descriptor in the gRPC response (today `HashDataResponse` already returns `hashAlgorithm`, and X.509 certificates embed their signature algorithm), so the application can store it verbatim rather than reconstructing it.
+This self-describing format is the **enabling primitive** for any later migration: without it, changing an algorithm forces a big-bang re-computation of all existing data; with it, migration becomes incremental and optional.
+* **Option C — Explicit profile `Version` field + discovery API**:
+Each profile carries a `Version` field, and a read-only discovery ("list profiles") API lets clients read the profiles and their versions/algorithms at runtime, so a client can detect a change and fail loudly instead of silently mismatching.
+* **Option D — Change-management and audit controls only**:
+Keep the current model but require review, versioned storage, and audit logging of every change to `Profiles.yaml`, relying on process rather than technical guarantees.
+* **Option E — Profile deprecation metadata**:
+A profile in `Profiles.yaml` carries optional metadata that marks it as outdated and names its successor, so the profile-responsible person can actively signal that consumers should migrate.
+The Crypto Broker surfaces this signal as a **deprecation warning attached to every response** produced with a deprecated profile, so applications are informed in-band without polling a separate endpoint.
+Example fields:
 
     ```yaml
     - Name: Default-2025
@@ -165,4 +178,3 @@ flowchart TD
     F -- No --> G[Contract:<br/>Remove deprecated profile from Profiles.yaml]
     G --> H([Only successor profile in use])
 ```
-
