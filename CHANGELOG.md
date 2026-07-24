@@ -3,6 +3,29 @@
 The list of commits in this changelog is automatically generated in the release process.
 The commits follow the Conventional Commit specification.
 
+## [0.4.0] - 2026-07-24
+
+### 🚀 Features
+
+- Encrypt decrypt specification (#36)
+- Add RFC for crl distribution URLs (#33)
+- Add encrypt-decrypt API ADR (#31)
+- Add key storage backend ADR (#29)
+- Add dependabot config (#25)
+
+### 🐛 Bug Fixes
+
+- Limit create-github-app-token permissions (#32)
+
+### 🚜 Refactor
+
+- Rewriting the profile, library, and server specification (#35)
+- Adjust workflow files (#27)
+
+### ⚙️ Miscellaneous Tasks
+
+- Adjust documentation to adjusted protobuf definitions (#37)
+
 ## [0.2.0] - 2026-04-24
 
 ### 🚀 Features
