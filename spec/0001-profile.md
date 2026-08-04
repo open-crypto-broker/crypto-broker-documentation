@@ -50,6 +50,7 @@ Defines settings for signing X.509 certificate signing requests (CSR).
 | --- | --- | --- |
 | `SignAlg` | String | The signing algorithm used to sign the certificate (e.g., `RSA`). |
 | `HashAlg` | String | The hash algorithm used in the certificate signature (e.g., `SHA-256`). |
+| `SKIHashAlg` | String | *(Optional)* The hash algorithm used to compute the Subject Key Identifier from the CSR public key (e.g., `SHA-256`, `SHA3-256`). Allowed values are `SHA-1`, `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`. If unset, the broker defaults to the deprecated `SHA-1` and emits a warning; an explicit value should be configured. |
 | `Validity` | Map | Specifies certificate validity period offsets. |
 | `KeyConstraints` | Map | Defines allowed key size constraints per algorithm for the Subject key and the Issuer (CA) key. |
 | `KeyUsage` | List of Strings | List of set key usage flags (e.g., `digitalSignature`, `keyEncipherment`). |
@@ -223,8 +224,10 @@ As defined in [RFC 5280 Section 4.2.1.2](https://www.rfc-editor.org/rfc/rfc5280#
 - Value type: `Byte Array`
 - Source:
     - Computed from the public key in the CSR.
+    - Validation: Profile field `SKIHashAlg`
 - Rules:
-    - The value must be derived from the public key using one of the methods described in RFC 5280 Section 4.2.1.2 (typically a SHA-1 hash of the BIT STRING value of the subjectPublicKey).
+    - The value must be derived from the public key using one of the methods described in RFC 5280 Section 4.2.1.2 (a hash of the BIT STRING value of the subjectPublicKey).
+    - The hash algorithm used to compute the value is taken from the profile field `SKIHashAlg`. Supported algorithms are `SHA-1`, `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`. If `SKIHashAlg` is unset, the broker defaults to the deprecated `SHA-1` and emits a warning; an explicit value should be configured. The use of SHA-2 and SHA-3 algorithms follows the additional key identifier generation methods described in [RFC 7093](https://www.rfc-editor.org/rfc/rfc7093).
     - The extension must be marked as non-critical.
     - For CA certificates (`Basic Constraints: CA=TRUE`), this extension must be included.
     - For end-entity certificates (`Basic Constraints: CA=FALSE`), this extension should be included.

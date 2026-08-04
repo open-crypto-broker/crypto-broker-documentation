@@ -129,6 +129,7 @@ The following algorithms are supported by the server. A given request may only u
 
 - Signature algorithms: RSA, ECDSA
 - Hash algorithms used for signing: SHA-256, SHA-384, SHA-512
+- Hash algorithms used for the Subject Key Identifier (`SKIHashAlg`): SHA-1, SHA-256, SHA-384, SHA-512, SHA3-256, SHA3-384, SHA3-512
 
 ### Encryption (`EncryptData` / `DecryptData`)
 
