@@ -1,5 +1,5 @@
 ---
-status: "proposed"
+status: accepted
 date: 2026-07-09
 decision-makers: Maximilian Lenkeit, Anselme Tueno, Stephan Andre
 consulted: Robin Winzler, Damian Jankowski, Pawel Chmielewski, Miyana Stange
@@ -70,32 +70,41 @@ Example fields:
 
 ## Decision Outcome
 
-No option is chosen yet; this ADR is **proposed** and captures the design space for the team to decide.
+**Option B (self-describing storage format) is adopted as the foundation, and profile changes are propagated through two sanctioned mechanisms: a *breaking change* (Option A, reduced to a disclaimer) and a *rolling migration* announced via deprecation metadata (Option E).** Option C is discarded, and Option D is retained only as advisory guidance.
 
-The options are not mutually exclusive.
-The combination of **Option A (immutable profile names as a contract)** and **Option B (self-describing storage format)** appears to be the strongest basis, because together they are the only combination that lets applications rarely react to a profile change:
+The options are not mutually exclusive, and the chosen combination gives the deployer a deliberate choice between speed and application friendliness.
 
-* Option A guarantees that the algorithms behind a given profile name never change underneath a running application; algorithm evolution happens by adding new named profiles.
-* Option B ensures that even stored artifacts (hashes, certificates, ciphertext) remain verifiable and usable, because each carries the profile, operation and concrete algorithm that produced it.
+**Option B — self-describing storage format, recording the *full* descriptor.**
+Every stored artifact records the profile, the operation and the **concrete algorithm** that produced it, not merely the profile name.
+Storing only the profile name is insufficient, because a profile name is not a stable pointer to an algorithm: the deployer can edit the algorithms behind a name in place (see Option A below).
+For example, if `HashData.HashAlg` of the profile `Default` is changed from `SHA3-512` to `SHA-256` while the name `Default` stays the same, a record that stored only `profile: "Default"` can no longer reproduce the original digest — re-hashing the input under the current `Default` yields a different, shorter value and the comparison fails.
+A record that stored `algorithm: "sha3-512"` alongside the value can still recompute and verify the original digest, and can even be verified or migrated by a different crypto service or library without any access to `Profiles.yaml`.
+This is why the broker should return the full descriptor in its responses and applications are expected to persist it.
+Because each record is self-describing, old and new records coexist in the same store and migration becomes incremental rather than a big-bang re-computation.
 
-Of the two, **Option B (the self-describing storage format) should be adopted first — ideally before a second profile is ever needed.**
-It is the foundation:
-Option A defines the *policy* (a profile name is an immutable contract), but Option B is the *mechanism* that makes that policy migratable in practice.
-An application that tags its stored data from day one can absorb any future profile change through incremental migration; an application that stored bare values with no algorithm tag is forced into a costly, all-at-once re-computation the first time an algorithm changes — which for large datasets may be infeasible.
+**Two ways to propagate a profile change.**
+On top of Option B, the deployer chooses how an algorithm change reaches applications:
 
-Option C (versioning + discovery) and Option E (deprecation metadata) are useful complements for runtime detection — Option E in particular lets the profile owner actively tell applications to migrate, delivered as a warning on every response rather than requiring the client to poll a discovery endpoint.
-Option D (change management) is advisable regardless of the technical option chosen, as it reinforces the downgrade-attack mitigations discussed in the [Configuration Options ADR](0008-configuration-options.md) and is a prerequisite for safely using Option E's `SupersededBy` pointer.
+* **Breaking change (Option A, as a disclaimer).** We cannot technically enforce that `Profiles.yaml` is an immutable contract, so Option A is reduced to a prominent warning in the documentation: editing the algorithms of an existing profile can silently break applications that compare freshly computed values against previously stored ones. This is an intentional, supported path — stakeholders want the ability to force an algorithm change quickly when a breaking change is the fastest way to retire a weak algorithm.
+* **Rolling migration (Option E — deprecation metadata).** The application-friendly path: instead of editing a profile in place, the deployer adds a new named profile and marks the old one deprecated (`Deprecated`, `SupersededBy`, `RemoveAfter`). The broker attaches a deprecation warning to every response produced with the deprecated profile, so applications are informed in-band and are given time to migrate before the profile is removed.
+
+**Discarded and advisory options.**
+Option C (explicit `Version` field + discovery API) is discarded: a discovery API is disproportionate effort for a feature that might never be used, and the version field was not judged helpful enough to justify the schema and client changes.
+Option D (change-management and audit controls) is retained only as advisory guidance: like Option A, we cannot enforce it, so where the deployer has no change-management process we can offer a "how-to-use" strategy but no technical guarantee. It remains a prerequisite for safely using Option E's `SupersededBy` pointer, which must only ever point to an equal-or-stronger profile.
 
 ### Consequences
 
-* Good, because applications no longer break silently when the deployer evolves algorithms.
-* Good, because crypto agility is preserved by adding new profiles rather than mutating existing ones.
+* Good, because self-describing records (Option B) remain verifiable and migratable even when the deployer edits a profile in place, since each record carries the concrete algorithm rather than only a profile name.
+* Good, because the deployer has an explicit choice between a fast breaking change and an application-friendly rolling migration, and crypto agility is preserved either way.
+* Good, because the rolling-migration path (Option E) informs applications in-band via a deprecation warning on every response, giving them time to transition.
+* Neutral, because Option B shifts a small responsibility to applications: they must persist the full descriptor alongside every value from the first write.
+* Bad, because the breaking-change path relies on a documentation disclaimer rather than a technical guarantee: a deployer who ignores it can still cause silent application failures.
 * Bad, because coexisting profiles and deprecation windows add operational and documentation overhead.
-* Bad, because returning a self-describing descriptor (Option B), a discovery API and `Version` field (Option C) and deprecation metadata (Option E) require changes to the profile schema, the protobuf messages and the clients.
+* Bad, because the self-describing descriptor (Option B) and the deprecation metadata and warning (Option E) require changes to the profile schema, the protobuf messages and the clients.
 
 ### Confirmation
 
-Compliance can be confirmed by a documented policy that profile names are immutable contracts, backed by review of `Profiles.yaml` changes, and — if Options B/C/E are adopted — by tests verifying that outputs carry the full self-describing descriptor (profile, operation, algorithm), that clients can discover profile versions, and that responses produced with a deprecated profile carry a deprecation warning.
+Confirmed by the stakeholders on 2026-07-05.
 
 ## Pros and Cons of the Options
 

@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 date: 2026-06-10
 decision-makers: Stephan Andre, Maximilian Lenkeit, Anselme Tueno
 consulted: Robin Winzler, Miyana Stange, Pawel Chmielewski, Damian Jankowski
