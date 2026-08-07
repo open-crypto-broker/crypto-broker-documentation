@@ -85,12 +85,17 @@ Because each record is self-describing, old and new records coexist in the same 
 **Two ways to propagate a profile change.**
 On top of Option B, the deployer chooses how an algorithm change reaches applications:
 
-* **Breaking change (Option A, as a disclaimer).** We cannot technically enforce that `Profiles.yaml` is an immutable contract, so Option A is reduced to a prominent warning in the documentation: editing the algorithms of an existing profile can silently break applications that compare freshly computed values against previously stored ones. This is an intentional, supported path — stakeholders want the ability to force an algorithm change quickly when a breaking change is the fastest way to retire a weak algorithm.
-* **Rolling migration (Option E — deprecation metadata).** The application-friendly path: instead of editing a profile in place, the deployer adds a new named profile and marks the old one deprecated (`Deprecated`, `SupersededBy`, `RemoveAfter`). The broker attaches a deprecation warning to every response produced with the deprecated profile, so applications are informed in-band and are given time to migrate before the profile is removed.
+* **Breaking change (Option A, as a disclaimer).**
+We cannot technically enforce that `Profiles.yaml` is an immutable contract, so Option A is reduced to a prominent warning in the documentation: editing the algorithms of an existing profile can silently break applications that compare freshly computed values against previously stored ones.
+This is an intentional, supported path — stakeholders want the ability to force an algorithm change quickly when a breaking change is the fastest way to retire a weak algorithm.
+* **Rolling migration (Option E — deprecation metadata).**
+The application-friendly path: instead of editing a profile in place, the deployer adds a new named profile and marks the old one deprecated (`Deprecated`, `SupersededBy`, `RemoveAfter`).
+The broker attaches a deprecation warning to every response produced with the deprecated profile, so applications are informed in-band and are given time to migrate before the profile is removed.
 
 **Discarded and advisory options.**
 Option C (explicit `Version` field + discovery API) is discarded: a discovery API is disproportionate effort for a feature that might never be used, and the version field was not judged helpful enough to justify the schema and client changes.
-Option D (change-management and audit controls) is retained only as advisory guidance: like Option A, we cannot enforce it, so where the deployer has no change-management process we can offer a "how-to-use" strategy but no technical guarantee. It remains a prerequisite for safely using Option E's `SupersededBy` pointer, which must only ever point to an equal-or-stronger profile.
+Option D (change-management and audit controls) is retained only as advisory guidance: like Option A, we cannot enforce it, so where the deployer has no change-management process we can offer a "how-to-use" strategy but no technical guarantee.
+It remains a prerequisite for safely using Option E's `SupersededBy` pointer, which must only ever point to an equal-or-stronger profile.
 
 ### Consequences
 
