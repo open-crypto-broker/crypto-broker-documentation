@@ -66,7 +66,9 @@ Every production cryptographic request is processed through the following stages
 1. **Resolve profile** — the profile named in the request is retrieved from the set of profiles loaded at startup. An unknown profile name results in an error.
 1. **Validate input** — the request payload is validated against the rules of the resolved profile. This includes parsing cryptographic material (CSR, CA certificate, private key) and checking it against profile constraints.
 1. **Execute** — the approved operation is delegated to the cryptographic backend, which performs the hashing or certificate signing using the algorithm and parameters selected by the profile.
-1. **Respond** — the result is packaged into the corresponding response message together with request metadata and returned to the client. Record-producing operations additionally return a self-describing descriptor (profile, operation and the concrete algorithm used) so the caller can persist it alongside the value (see [Self-describing responses](#self-describing-responses)). When the resolved profile is deprecated, a deprecation warning is attached to the response. On failure, a verbose error is returned instead.
+1. **Respond** — the result is packaged into the corresponding response message together with request metadata and returned to the client.
+Record-producing operations additionally return a self-describing descriptor (profile, operation and the concrete algorithm used) so the caller can persist it alongside the value (see [Self-describing responses](#self-describing-responses)).
+When the resolved profile is deprecated, a deprecation warning is attached to the response. On failure, a verbose error is returned instead.
 
 The server does not perform cryptographic operations that are not authorized by a profile, and it never selects algorithms or parameters that are not permitted by the resolved profile.
 
@@ -74,7 +76,9 @@ The server does not perform cryptographic operations that are not authorized by 
 
 ## Profiles
 
-Profiles are the central policy mechanism of the server. Each profile defines which cryptographic operations are allowed and under which constraints (algorithms, key-size limits, certificate validity boundaries, key usages, and so on). The profile structure is defined in the [Crypto Broker Profile Specification](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0001-profile.md).
+Profiles are the central policy mechanism of the server.
+Each profile defines which cryptographic operations are allowed and under which constraints (algorithms, key-size limits, certificate validity boundaries, key usages, and so on).
+The profile structure is defined in the [Crypto Broker Profile Specification](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0001-profile.md).
 
 - Profiles are loaded and validated once at startup from a YAML file (`Profiles.yaml`). The directory containing this file is provided via configuration.
 - Loading fails fast: if the file cannot be read, parsed, or if any profile is invalid or references unsupported values, the server does not start.
@@ -83,11 +87,16 @@ Profiles are the central policy mechanism of the server. Each profile defines wh
 
 ### Profile deprecation and migration
 
-A profile may carry optional deprecation metadata (see the [Profile Specification](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0001-profile.md) and the [Profile Change and Migration Guidance ADR](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/adr/overall/0013-profile-change-migration-guidance.md)). When a request resolves to a deprecated profile, the server still performs the operation and additionally attaches a deprecation warning to the response, naming the successor profile and the sunset date. This enables a rolling migration in which applications are informed in-band and migrate before the profile is removed. The successor referenced by `SupersededBy` must only ever point to an equal-or-stronger profile; because the server cannot enforce this technically, it must be governed by change-management and audit controls.
+A profile may carry optional deprecation metadata (see the [Profile Specification](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0001-profile.md) and the [Profile Change and Migration Guidance ADR](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/adr/overall/0013-profile-change-migration-guidance.md)).
+When a request resolves to a deprecated profile, the server still performs the operation and additionally attaches a deprecation warning to the response, naming the successor profile and the sunset date.
+This enables a rolling migration in which applications are informed in-band and migrate before the profile is removed.
+The successor referenced by `SupersededBy` must only ever point to an equal-or-stronger profile; because the server cannot enforce this technically, it must be governed by change-management and audit controls.
 
 ### Self-describing responses
 
-Record-producing operations (`HashData`, `SignCertificate`, `EncryptData`) return a self-describing descriptor alongside the result, capturing the profile, the operation and the concrete algorithm actually used. Applications are expected to persist this descriptor with the stored artifact so that records remain verifiable and migratable across later profile changes. Editing the algorithms of an existing profile in place is a supported but breaking action: applications that compare freshly computed values against previously stored ones can silently break, so such changes should instead be performed as a rolling migration via a new profile and deprecation metadata.
+Record-producing operations (`HashData`, `SignCertificate`, `EncryptData`) return a self-describing descriptor alongside the result, capturing the profile, the operation and the concrete algorithm actually used.
+Applications are expected to persist this descriptor with the stored artifact so that records remain verifiable and migratable across later profile changes.
+Editing the algorithms of an existing profile in place is a supported but breaking action: applications that compare freshly computed values against previously stored ones can silently break, so such changes should instead be performed as a rolling migration via a new profile and deprecation metadata.
 
 ---
 
