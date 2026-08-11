@@ -70,6 +70,7 @@ The `HashData` API returns a response body `HashDataResponse`, from which the fo
 | `hashValueHex` | String | Hash value of the provided input bytes as a hexadecimal string. Set when `outputFormat` is `HEX`. |
 | `hashValueRaw` | Bytes | Hash value of the provided input bytes as raw bytes. Set when `outputFormat` is `RAW`. |
 | `hashAlgorithm` | String | Hash algorithm used to compute the hash value (e.g. `SHA-256` or `SHA3-256`). |
+| `descriptor` | Map | Self-describing descriptor of how the hash was produced (see [`descriptor` message](#descriptor-message)). Should be persisted alongside the hash value. |
 | `metadata` | Map | Metadata about the Crypto Broker request/response. |
 
 #### `SignCertificate`
@@ -99,6 +100,7 @@ The `SignCertificate` API returns a response body `SignCertificateResponse`, fro
 | --- | --- | --- |
 | `pem` | String | PEM-encoded signed certificate. Set when `outputFormat` is `PEM`. |
 | `der` | Bytes | DER-encoded signed certificate. Set when `outputFormat` is `DER`. |
+| `descriptor` | Map | Self-describing descriptor of how the certificate was signed (see [`descriptor` message](#descriptor-message)). Should be persisted alongside the certificate. |
 | `metadata` | Map | Metadata about the Crypto Broker request/response. |
 
 All other values like validity, signature algorithm etc. can be extracted from the certificate itself.
@@ -198,6 +200,7 @@ All other languages need to include the `health.proto` file in the protobuf comp
 | --- | --- | --- |
 | `id` | String | ID of the request, given as a UUID v4 in String format. |
 | `traceContext` | Map | *(Optional)* Trace context for manual propagation of distributed tracing information. |
+| `deprecation` | Map | *(Optional)* Deprecation warning (see [`deprecation`](#deprecation)). Set on every response produced with a deprecated profile. |
 
 ### `traceContext`
 
@@ -208,6 +211,32 @@ All other languages need to include the `health.proto` file in the protobuf comp
 | `traceFlags` | String | Trace flags (e.g. sampling decision). |
 | `traceState` | String | Vendor-specific trace state. |
 | `correlationId` | String | Correlation identifier for the request. |
+
+### `deprecation`
+
+Deprecation warning attached to every response produced with a deprecated profile, enabling the rolling-migration path described in the [Profile Change and Migration Guidance ADR](../adr/overall/0013-profile-change-migration-guidance.md). The values mirror the profile's [`Deprecation`](0001-profile.md#deprecation) metadata.
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `profile` | String | Name of the deprecated profile the response was produced with. |
+| `supersededBy` | String | *(Optional)* Name of the successor profile the application should migrate to. |
+| `deprecatedSince` | String | *(Optional)* Date the profile was deprecated. |
+| `removeAfter` | String | *(Optional)* Sunset date after which the profile is removed. |
+| `reason` | String | *(Optional)* Human-readable explanation of why the profile is deprecated. |
+
+---
+
+## `descriptor` message
+
+Self-describing record of how a stored cryptographic artifact was produced, returned by the record-producing APIs (`HashData`, `SignCertificate`, `EncryptData`).
+Applications **should persist this descriptor verbatim alongside the value**, so that the record stays verifiable and migratable even after the underlying profile changes, and without access to `Profiles.yaml`.
+See the [Profile Change and Migration Guidance ADR](../adr/overall/0013-profile-change-migration-guidance.md) for the rationale.
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `profile` | String | Name of the profile that produced the artifact. |
+| `operation` | String | The API that produced the artifact (e.g. `HashData`, `SignCertificate`, `EncryptData`). |
+| `algorithm` | String | The concrete algorithm actually used (e.g. `sha3-512`, `aes-gcm`). |
 
 ---
 
@@ -244,6 +273,7 @@ In fully KMS-managed flows the broker stores these itself, so only the `keyId` i
 | `nonce` | Bytes | *(Optional)* The nonce actually used for encryption. |
 | `aad` | Bytes | *(Optional)* The additional authenticated data bound to the ciphertext. |
 | `tag` | Bytes | *(Optional)* The authentication tag produced by the authenticated encryption algorithm. |
+| `descriptor` | Map | Self-describing descriptor of how the ciphertext was produced (see [`descriptor` message](#descriptor-message)). Should be persisted alongside the ciphertext. |
 
 ## `decryptMetadata` message
 

@@ -15,6 +15,7 @@ The first part of this document describes the structure of a profile. The second
 | `Name` | String | Name of the profile (e.g., `Default`, `PCI-DSS`). Must be unique. |
 | `Settings` | Map | Global cryptographic settings, e.g. which cryptographic library to use or which key storage to use. |
 | `API` | Map | Optional API-specific configuration sections. |
+| `Deprecation` | Map | *(Optional)* Marks the profile as deprecated and points to its successor for a rolling migration. See [`Deprecation`](#deprecation). |
 
 #### Notes
 
@@ -33,6 +34,30 @@ The `Name` field is a string that uniquely identifies the profile. It is used to
 | --- | --- | --- |
 | `CryptoLibrary` | String | The underlying cryptographic library to use (e.g., `openssl` or `native`). |
 | `KMS` | String | *(Optional)* Key storage backend used to manage key material for this profile (e.g., `openbao`). If unset, the profile is caller-managed and the broker keeps no key material; if set, the profile is broker-managed and keys are referenced by identifier. See the [Key Storage Backend ADR](../adr/overall/0011-key-storage-backend.md). |
+
+## `Deprecation`
+
+The optional `Deprecation` map marks a profile as outdated and names its successor, enabling the rolling-migration path described in the [Profile Change and Migration Guidance ADR](../adr/overall/0013-profile-change-migration-guidance.md). When present, the Crypto Broker attaches a deprecation warning to every response produced with this profile, so applications are informed in-band and can migrate before the profile is removed. The profile remains fully functional until it is removed.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `SupersededBy` | String | *(Optional)* Name of the successor profile applications should migrate to. |
+| `DeprecatedSince` | String | *(Optional)* Date the profile was deprecated (e.g., `2026-01-01`). |
+| `RemoveAfter` | String | *(Optional)* Sunset date after which the profile is removed (e.g., `2026-12-31`). |
+| `Reason` | String | *(Optional)* Human-readable explanation of why the profile is deprecated. |
+
+Example:
+
+```yaml
+- Name: Default-2025
+  Deprecation:
+    SupersededBy: Default-2026
+    DeprecatedSince: 2026-01-01
+    RemoveAfter: 2026-12-31
+    Reason: "SHA3-512 replaced per crypto policy update"
+```
+
+> Note: `SupersededBy` is a redirection pointer and therefore a downgrade vector. It must only ever point to an equal-or-stronger profile, and changes to it must be covered by change-management and audit controls, so that an attacker who can edit `Profiles.yaml` cannot steer clients toward a weaker profile.
 
 ## API: `HashData`
 
