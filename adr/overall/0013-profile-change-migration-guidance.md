@@ -60,13 +60,13 @@ Example fields:
     ```yaml
     - Name: Default-2025
       Deprecated: true
-      SupersededBy: Default-2026      # successor profile the app should migrate to
+      ReplacedBy: Default-2026      # successor profile the app should migrate to
       DeprecatedSince: 2026-01-01
       RemoveAfter: 2026-12-31         # sunset date after which the profile is removed
       Reason: "SHA3-512 replaced per crypto policy update"
     ```
 
-    `SupersededBy` is a redirection pointer and therefore a downgrade vector: it must be covered by the change-management/audit controls of Option D and must only ever point to an equal-or-stronger profile, so that an attacker who can edit `Profiles.yaml` cannot steer clients toward a weak profile "for migration".
+    `ReplacedBy` is a redirection pointer and therefore a downgrade vector: it should be covered by the change-management/audit controls of Option D and should point to an equal-or-stronger profile, so that an attacker who can edit `Profiles.yaml` cannot steer clients toward a weak profile "for migration".
 
 ## Decision Outcome
 
@@ -89,13 +89,13 @@ On top of Option B, the deployer chooses how an algorithm change reaches applica
 We cannot technically enforce that `Profiles.yaml` is an immutable contract, so Option A is reduced to a prominent warning in the documentation: editing the algorithms of an existing profile can silently break applications that compare freshly computed values against previously stored ones.
 This is an intentional, supported path — stakeholders want the ability to force an algorithm change quickly when a breaking change is the fastest way to retire a weak algorithm.
 * **Rolling migration (Option E — deprecation metadata).**
-The application-friendly path: instead of editing a profile in place, the deployer adds a new named profile and marks the old one deprecated (`Deprecated`, `SupersededBy`, `RemoveAfter`).
+The application-friendly path: instead of editing a profile in place, the deployer adds a new named profile and marks the old one deprecated (`Deprecated`, `ReplacedBy`, `RemoveAfter`).
 The broker attaches a deprecation warning to every response produced with the deprecated profile, so applications are informed in-band and are given time to migrate before the profile is removed.
 
 **Discarded and advisory options.**
 Option C (explicit `Version` field + discovery API) is discarded: a discovery API is disproportionate effort for a feature that might never be used, and the version field was not judged helpful enough to justify the schema and client changes.
 Option D (change-management and audit controls) is retained only as advisory guidance: like Option A, we cannot enforce it, so where the deployer has no change-management process we can offer a "how-to-use" strategy but no technical guarantee.
-It remains a prerequisite for safely using Option E's `SupersededBy` pointer, which must only ever point to an equal-or-stronger profile.
+It remains a prerequisite for safely using Option E's `ReplacedBy` pointer, which should point to an equal-or-stronger profile.
 
 ### Consequences
 
@@ -147,11 +147,11 @@ Confirmed by the stakeholders on 2026-07-05.
 
 ### Option E — Profile deprecation metadata
 
-* Good, because the profile owner can actively signal that a profile is outdated and name its successor (`SupersededBy`).
+* Good, because the profile owner can actively signal that a profile is outdated and name its successor (`ReplacedBy`).
 * Good, because delivering the warning in every response informs applications in-band, with no extra API call or polling.
 * Good, because `RemoveAfter` enables a clear, deadline-driven migration and sunset process, plus dashboards and alerts.
 * Neutral, because it adds a few optional fields to the profile schema and a warning field to the response messages.
-* Bad, because `SupersededBy` is a downgrade vector that must be constrained to equal-or-stronger profiles and audited, and therefore depends on Option D.
+* Bad, because `ReplacedBy` is a downgrade vector that should be constrained to equal-or-stronger profiles and audited, and therefore depends on Option D.
 
 ## More Information
 
