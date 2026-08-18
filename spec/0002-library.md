@@ -219,7 +219,7 @@ Deprecation warning attached to every response produced with a deprecated profil
 | Variable | Type | Description |
 | --- | --- | --- |
 | `profile` | String | Name of the deprecated profile the response was produced with. |
-| `supersededBy` | String | *(Optional)* Name of the successor profile the application should migrate to. |
+| `replacedBy` | String | *(Optional)* Name of the successor profile the application should migrate to. |
 | `deprecatedSince` | String | *(Optional)* Date the profile was deprecated. |
 | `removeAfter` | String | *(Optional)* Sunset date after which the profile is removed. |
 | `reason` | String | *(Optional)* Human-readable explanation of why the profile is deprecated. |

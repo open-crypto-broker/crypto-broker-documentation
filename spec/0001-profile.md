@@ -37,11 +37,13 @@ The `Name` field is a string that uniquely identifies the profile. It is used to
 
 ## `Deprecation`
 
-The optional `Deprecation` map marks a profile as outdated and names its successor, enabling the rolling-migration path described in the [Profile Change and Migration Guidance ADR](../adr/overall/0013-profile-change-migration-guidance.md). When present, the Crypto Broker attaches a deprecation warning to every response produced with this profile, so applications are informed in-band and can migrate before the profile is removed. The profile remains fully functional until it is removed.
+The optional `Deprecation` map marks a profile as outdated and names its successor, enabling the rolling-migration path described in the [Profile Change and Migration Guidance ADR](../adr/overall/0013-profile-change-migration-guidance.md).
+When present, the Crypto Broker attaches a deprecation warning to every response produced with this profile, so applications are informed in-band and can migrate before the profile is removed.
+The profile remains fully functional until it is removed.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `SupersededBy` | String | *(Optional)* Name of the successor profile applications should migrate to. |
+| `ReplacedBy` | String | *(Optional)* Name of the successor profile applications should migrate to. |
 | `DeprecatedSince` | String | *(Optional)* Date the profile was deprecated (e.g., `2026-01-01`). |
 | `RemoveAfter` | String | *(Optional)* Sunset date after which the profile is removed (e.g., `2026-12-31`). |
 | `Reason` | String | *(Optional)* Human-readable explanation of why the profile is deprecated. |
@@ -51,13 +53,13 @@ Example:
 ```yaml
 - Name: Default-2025
   Deprecation:
-    SupersededBy: Default-2026
+    ReplacedBy: Default-2026
     DeprecatedSince: 2026-01-01
     RemoveAfter: 2026-12-31
     Reason: "SHA3-512 replaced per crypto policy update"
 ```
 
-> Note: `SupersededBy` is a redirection pointer and therefore a downgrade vector. It must only ever point to an equal-or-stronger profile, and changes to it must be covered by change-management and audit controls, so that an attacker who can edit `Profiles.yaml` cannot steer clients toward a weaker profile.
+> Note: `ReplacedBy` is a redirection pointer and therefore a downgrade vector. It should only ever point to an equal-or-stronger profile, and changes to it should be covered by change-management and audit controls, so that an attacker who can edit `Profiles.yaml` cannot steer clients toward a weaker profile.
 
 ## API: `HashData`
 

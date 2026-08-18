@@ -90,7 +90,7 @@ The profile structure is defined in the [Crypto Broker Profile Specification](ht
 A profile may carry optional deprecation metadata (see the [Profile Specification](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0001-profile.md) and the [Profile Change and Migration Guidance ADR](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/adr/overall/0013-profile-change-migration-guidance.md)).
 When a request resolves to a deprecated profile, the server still performs the operation and additionally attaches a deprecation warning to the response, naming the successor profile and the sunset date.
 This enables a rolling migration in which applications are informed in-band and migrate before the profile is removed.
-The successor referenced by `SupersededBy` must only ever point to an equal-or-stronger profile; because the server cannot enforce this technically, it must be governed by change-management and audit controls.
+It is recommended that the successor referenced by `replacedBy` should point to an equal-or-stronger profile; because the server cannot enforce this technically, it must be governed by change-management and audit controls.
 
 ### Self-describing responses
 
@@ -163,7 +163,7 @@ The server is designed to enforce cryptographic policy and to minimize exposure:
 - **Resource limits** — request and response message sizes and the number of concurrent streams are bounded to reduce the impact of abusive or malformed traffic.
 - **Reduced production surface** — the development service (`CryptoGrpcDev`) is only registered in development environments and is disabled in production.
 - **Sensitive material handling** — sensitive key material is zeroized in memory once it is no longer needed.
-- **No silent downgrade** — a deprecated profile's `SupersededBy` pointer is a downgrade vector and must only reference an equal-or-stronger profile, under change-management and audit controls.
+- **No silent downgrade** — a deprecated profile's `replacedBy` pointer is a downgrade vector and must only reference an equal-or-stronger profile, under change-management and audit controls.
 
 ### FIPS 140 mode
 
