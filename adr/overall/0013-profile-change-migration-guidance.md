@@ -42,8 +42,8 @@ Problem question: How should profile changes be governed and communicated so tha
 A profile name is treated as an immutable contract for the algorithms it selects.
 Algorithms are never changed in place; instead a new profile with a new name is introduced (e.g. `Default-2026`, or a standard-based name such as `FIPS-140-3-256bit`).
 Old and new profiles coexist for a defined deprecation window so applications migrate on their own schedule.
-* **Option B — Self-describing storage format**:
-Every stored cryptographic artifact is persisted together with a descriptor of how it was produced: the **profile**, the **operation/API** that produced it (`HashData`, `SignCertificate`, `EncryptData`) and the **concrete algorithm** that was actually used, e.g. `{ value, profile: "Default-2025", operation: "HashData", algorithm: "sha3-512" }`.
+* **Option B — Self-describing return format**:
+Every returned cryptographic artifact is persisted together with a descriptor of how it was produced: the **profile**, the **operation/API** that produced it (`HashData`, `SignCertificate`, `EncryptData`) and the **concrete algorithm** that was actually used, e.g. `{ value, profile: "Default-2025", operation: "HashData", algorithm: "sha3-512" }`.
 Recording the concrete algorithm unconditionally is what removes all ambiguity: the record can be verified, decrypted or even migrated to a completely different crypto service or library without any access to the original `Profiles.yaml`.
 Applications verify, decrypt or compare against the *stored* descriptor rather than an assumed "current" one, so records produced under different profiles coexist indefinitely in the same store.
 To make correct usage the path of least resistance, the Crypto Broker returns this descriptor in the gRPC response (today `HashDataResponse` already returns `hashAlgorithm`, and X.509 certificates embed their signature algorithm), so the application can store it verbatim rather than reconstructing it.
@@ -70,15 +70,15 @@ Example fields:
 
 ## Decision Outcome
 
-**Option B (self-describing storage format) is adopted as the foundation, and profile changes are propagated through two sanctioned mechanisms: a *breaking change* (Option A, reduced to a disclaimer) and a *rolling migration* announced via deprecation metadata (Option E).** Option C is discarded, and Option D is retained only as advisory guidance.
+**Option B (self-describing return format) is adopted as the foundation, and profile changes are propagated through two sanctioned mechanisms: a *breaking change* (Option A, reduced to a disclaimer) and a *rolling migration* announced via deprecation metadata (Option E).** Option C is discarded, and Option D is retained only as advisory guidance.
 
 The options are not mutually exclusive, and the chosen combination gives the deployer a deliberate choice between speed and application friendliness.
 
-**Option B — self-describing storage format, recording the *full* descriptor.**
-Every stored artifact records the profile, the operation and the **concrete algorithm** that produced it, not merely the profile name.
-Storing only the profile name is insufficient, because a profile name is not a stable pointer to an algorithm: the deployer can edit the algorithms behind a name in place (see Option A below).
-For example, if `HashData.HashAlg` of the profile `Default` is changed from `SHA3-512` to `SHA-256` while the name `Default` stays the same, a record that stored only `profile: "Default"` can no longer reproduce the original digest — re-hashing the input under the current `Default` yields a different, shorter value and the comparison fails.
-A record that stored `algorithm: "sha3-512"` alongside the value can still recompute and verify the original digest, and can even be verified or migrated by a different crypto service or library without any access to `Profiles.yaml`.
+**Option B — self-describing return format, recording the *full* descriptor.**
+Every returned artifact records the profile, the operation and the **concrete algorithm** that produced it, not merely the profile name.
+Returning only the profile name is insufficient, because a profile name is not a stable pointer to an algorithm: the deployer can edit the algorithms behind a name in place (see Option A below).
+For example, if `HashData.HashAlg` of the profile `Default` is changed from `SHA3-512` to `SHA-256` while the name `Default` stays the same, a record that returned only `profile: "Default"` can no longer reproduce the original digest — re-hashing the input under the current `Default` yields a different, shorter value and the comparison fails.
+A record that returned `algorithm: "sha3-512"` alongside the value can still recompute and verify the original digest, and can even be verified or migrated by a different crypto service or library without any access to `Profiles.yaml`.
 This is why the broker should return the full descriptor in its responses and applications are expected to persist it.
 Because each record is self-describing, old and new records coexist in the same store and migration becomes incremental rather than a big-bang re-computation.
 
@@ -121,15 +121,15 @@ Confirmed by the stakeholders on 2026-07-05.
 * Neutral, because it requires a defined deprecation and removal process for old profiles.
 * Bad, because multiple coexisting profiles increase configuration size and operational overhead.
 
-### Option B — Self-describing storage format
+### Option B — Self-describing return format
 
-* Good, because stored artifacts remain verifiable and usable regardless of later profile changes.
-* Good, because recording the concrete algorithm on every record makes it fully portable — it can be verified, decrypted or migrated by a different crypto service or library without the original profile definition.
+* Good, because returned artifacts remain verifiable and usable regardless of later profile changes.
+* Good, because recording the concrete algorithm on every returned artifact makes it fully portable — it can be verified, decrypted or migrated by a different crypto service or library without the original profile definition.
 * Good, because it is the enabling primitive for incremental migration: data can be drained from an old profile lazily instead of in a big-bang re-computation.
 * Good, because the broker can return the descriptor in the response, so the application stores it directly instead of reconstructing it.
 * Neutral, because it shifts a small responsibility to applications: they **must** persist the descriptor alongside the value, from the very first write.
 * Bad, because it does not by itself prevent breakage for applications that compare freshly computed values across a profile change — it must be paired with Option A.
-* Bad, because retrofitting the descriptor onto data that was already stored without it is itself a migration.
+* Bad, because retrofitting the descriptor onto data that was already returned without it is itself a migration.
 
 ### Option C — Explicit profile `Version` field + discovery API
 
@@ -161,11 +161,11 @@ Confirmed by the stakeholders on 2026-07-05.
 
 ## Migrating Data Between Profiles
 
-This section explains how an application actually moves stored data from an old profile to a new one once Option A + Option B are in place. The central message is: **with a self-describing storage format you usually do not perform a big-bang re-computation at all** — you migrate the *contract*, keep the data self-describing, and let it converge incrementally (or never).
+This section explains how an application actually moves stored data from an old profile to a new one once Option A + Option B are in place. The central message is: **with a self-describing return format you usually do not perform a big-bang re-computation at all** — you migrate the *contract*, keep the data self-describing, and let it converge incrementally (or never).
 
 ### Core principle: migrate the contract, not the data
 
-Because every stored artifact records the profile that produced it (Option B), old and new records can live side by side in the same table forever. The application:
+Because every returned artifact records the profile that produced it (Option B), old and new records can live side by side in the same table forever. The application:
 
 1. **reads both** — verifies/decrypts each record using the profile stored *with that record*, and
 2. **writes new** — produces any new or updated record under the new profile.
