@@ -1,5 +1,5 @@
 ---
-status: "proposed"
+status: closed
 date: 2025-10-06
 decision-makers: Stephan Andre, Maximilian Lenkeit, Anselme Tueno
 consulted: Pawel Chmielewski, Miyana Stange, Robin Winzler
