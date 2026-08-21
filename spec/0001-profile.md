@@ -14,8 +14,8 @@ The first part of this document describes the structure of a profile. The second
 | --- | --- | --- |
 | `Name` | String | Name of the profile (e.g., `Default`, `PCI-DSS`). Must be unique. |
 | `Settings` | Map | Global cryptographic settings, e.g. which cryptographic library to use or which key storage to use. |
-| `API` | Map | Optional API-specific configuration sections. |
 | `Deprecation` | Map | *(Optional)* Marks the profile as deprecated and points to its successor for a rolling migration. See [`Deprecation`](#deprecation). |
+| `API` | Map | Optional API-specific configuration sections. |
 
 #### Notes
 
@@ -33,7 +33,7 @@ The `Name` field is a string that uniquely identifies the profile. It is used to
 | Field | Type | Description |
 | --- | --- | --- |
 | `CryptoLibrary` | String | The underlying cryptographic library to use (e.g., `openssl` or `native`). |
-| `KMS` | String | *(Optional)* Key storage backend used to manage key material for this profile (e.g., `openbao`). If unset, the profile is caller-managed and the broker keeps no key material; if set, the profile is broker-managed and keys are referenced by identifier. See the [Key Storage Backend ADR](../adr/overall/0011-key-storage-backend.md). |
+| `KMS` | String | *(Optional)* Key storage backend from which the broker retrieves key material for this profile (e.g., `OpenBao`). If unset, the profile is caller-managed and the broker keeps no key material; if set, the caller references an externally provisioned key by identifier, which the broker resolves and retrieves from the KMS. The broker performs no key lifecycle management (no create, import, or delete). See the [Key Storage Backend ADR](../adr/overall/0011-key-storage-backend.md) and [Key Resolution ADR](../adr/overall/0014-kms.md). |
 
 ## `Deprecation`
 
@@ -68,6 +68,17 @@ Configures how data should be hashed.
 | Field | Type | Description |
 | --- | --- | --- |
 | `HashAlg` | String | The hash algorithm to use (e.g., `SHA-512`, `SHA3-512`). |
+
+## API: `EncryptData` and `DecryptData`
+
+Defines settings for symmetric encryption and decryption. This section governs both the `EncryptData` and `DecryptData` APIs, which share the same algorithm and key constraints.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `EncryptAlg` | String | The authenticated encryption algorithm to use (e.g., `aes-gcm`). |
+| `KeySize` | Int | Defines the allowed key size for the encryption key. |
+| `NonceStrategy` | String | How the nonce is obtained. Only `user-provided` is supported: the caller always supplies the nonce via the API and owns its uniqueness. |
+| `TagLength` | Int | Length of the authentication tag in bits. For `aes-gcm`, allowed values are `96`, `104`, `112`, `120`, `128`, with `128` recommended. Shorter tags (`64`, `32`) are only approved for restricted applications per [NIST SP 800-38D](https://doi.org/10.6028/NIST.SP.800-38D) Appendix C and should not be used in general-purpose profiles. |
 
 ## API: `SignCertificate`
 
@@ -125,28 +136,6 @@ Defines settings for signing X.509 certificate signing requests (CSR).
 | `PathLenConstraint` | Int | *(Optional)* Specifies the maximum number of intermediate certificates that may follow this certificate in a valid certification path. Only applicable if `CA` is `true`. |
 
 > Note: If `CA` is `false` and `PathLenConstraint` is configured, the implementation shall throw an error.
-
-## API: `EncryptData` and `DecryptData`
-
-Defines settings for symmetric encryption and decryption. This section governs both the `EncryptData` and `DecryptData` APIs, which share the same algorithm and key constraints.
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `EncryptAlg` | String | The authenticated encryption algorithm to use (e.g., `aes-gcm`). |
-| `KeyConstraints` | Map | Defines the allowed key size constraints for the encryption key. |
-| `NonceStrategy` | String | How the nonce is obtained: `random` (broker-generated) or `user-provided` (supplied via the API). |
-| `TagLength` | Int | Length of the authentication tag in bits (e.g., `128`). |
-
-> Note: Whether a key is referenced by identifier or supplied inline is determined by the `KMS` setting of the profile (see [`Settings`](#settings)). A profile without a `KMS` setting requires the caller to supply raw key material; a profile with a `KMS` setting expects a key identifier.
-
-### `KeyConstraints`
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `MinKeySize` | Int | Minimum allowable key size in bits. |
-| `MaxKeySize` | Int | Maximum allowable key size in bits. |
-
-> Note: For caller-managed profiles (no `KMS`), the broker validates the length of the supplied raw key against these constraints. For broker-managed profiles (with `KMS`), the referenced key must satisfy these constraints.
 
 ---
 

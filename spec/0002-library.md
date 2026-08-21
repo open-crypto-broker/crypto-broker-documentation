@@ -109,7 +109,8 @@ All other values like validity, signature algorithm etc. can be extracted from t
 
 The `EncryptData` API function allows clients to encrypt arbitrary data using an authenticated symmetric encryption algorithm specified in a profile. The client-side function maps directly to the `EncryptData` RPC method of the `CryptoGrpc` gRPC service.
 
-The encryption key is supplied via a `keySource` (see [`KeySource` message](#keysource-message)). Depending on the profile, the caller either references a key managed by a key storage backend (`keyId`) or supplies raw key material inline (`rawKey`). Optional encryption parameters such as the nonce and additional authenticated data (AAD) can be supplied via `encryptMetadata`; when omitted, the Crypto Broker generates or derives them according to the profile.
+The encryption key is supplied via a `keySource` (see [`KeySource` message](#keysource-message)). The caller can either reference an externally provisioned key that the broker retrieves from a key storage backend (`keyId`) or supply raw key material inline (`rawKey`).
+Encryption parameters are supplied via `encryptMetadata`: the caller always provides the nonce, and optionally additional authenticated data (AAD).
 
 ##### `EncryptData` Input
 
@@ -135,7 +136,7 @@ The `EncryptData` API returns a response body `EncryptDataResponse`, from which 
 
 The `DecryptData` API function allows clients to decrypt data previously produced by `EncryptData`. The client-side function maps directly to the `DecryptData` RPC method of the `CryptoGrpc` gRPC service.
 
-The caller provides the same `keySource` variant expected by the profile. For caller-managed and hybrid flows, the caller also supplies the decryption parameters via `decryptMetadata`, typically by echoing back the values from the `cipherMetadata` returned by `EncryptData`. For fully KMS-managed flows, the Crypto Broker resolves these parameters itself and `decryptMetadata` may be omitted.
+The caller provides the same `keySource` variant expected by the profile, and supplies the decryption parameters via `decryptMetadata`, typically by echoing back the values from the `cipherMetadata` returned by `EncryptData`.
 
 ##### `DecryptData` Input
 
@@ -248,42 +249,39 @@ Which variant is valid is determined by the profile: a profile without a key sto
 
 | Variable | Type | Description |
 | --- | --- | --- |
-| `keyId` | String | Reference to a key managed by the key storage backend. Set for broker-managed (KMS-backed) profiles. |
+| `keyId` | String | Identifier of an externally provisioned key that the broker resolves and retrieves from the key storage backend. Set for profiles with a `KMS`. |
 | `rawKey` | Bytes | Inline key material supplied by the caller. Set for caller-managed profiles without a `KMS`. |
 
 ## `encryptMetadata` message
 
-Optional caller-supplied encryption parameters for the `EncryptData` API. When omitted, the Crypto Broker generates or derives these values according to the profile.
+Caller-supplied encryption parameters for the `EncryptData` API. The caller always supplies the nonce; neither the broker nor the KMS generates it.
 
 | Variable | Type | Description |
 | --- | --- | --- |
-| `nonce` | Bytes | *(Optional)* Nonce to use for encryption. Only permitted when the profile's `NonceStrategy` is `user-provided`. |
+| `nonce` | Bytes | Nonce to use for encryption. Always supplied by the caller, which owns its uniqueness. |
 | `aad` | Bytes | *(Optional)* Additional authenticated data to bind to the ciphertext. |
 
 ## `cipherMetadata` message
 
 Metadata produced by `EncryptData` and returned alongside the ciphertext.
-It encapsulates everything the caller may need besides the ciphertext itself.
-Each field is optional and populated according to the flow: `keyId` is echoed for KMS-backed profiles, while `nonce`, `aad` and `tag` are returned only when the caller must retain them (caller-managed flows, or the hybrid flow where the broker generated the nonce).
-In fully KMS-managed flows the broker stores these itself, so only the `keyId` is returned.
+It encapsulates everything the caller may need besides the ciphertext itself: `keyId` is echoed for profiles with a `KMS`, while `nonce`, `aad` and `tag` are echoed back for the caller to retain and pass to `DecryptData`.
 
 | Variable | Type | Description |
 | --- | --- | --- |
 | `keyId` | String | *(Optional)* The key identifier that was used, echoed back for KMS-backed profiles. Raw key material is never returned. |
-| `nonce` | Bytes | *(Optional)* The nonce actually used for encryption. |
+| `nonce` | Bytes | The nonce actually used for encryption. |
 | `aad` | Bytes | *(Optional)* The additional authenticated data bound to the ciphertext. |
 | `tag` | Bytes | *(Optional)* The authentication tag produced by the authenticated encryption algorithm. |
 | `descriptor` | Map | Self-describing descriptor of how the ciphertext was produced (see [`descriptor` message](#descriptor-message)). Should be persisted alongside the ciphertext. |
 
 ## `decryptMetadata` message
 
-Optional caller-supplied decryption parameters for the `DecryptData` API, symmetric to [`encryptMetadata`](#encryptmetadata-message).
-In KMS-managed flows the Crypto Broker resolves the required parameters itself, so the caller may omit them.
-In caller-managed or hybrid flows the caller provides them, typically by echoing back the values from the `cipherMetadata` returned by `EncryptData`.
+Caller-supplied decryption parameters for the `DecryptData` API, symmetric to [`encryptMetadata`](#encryptmetadata-message).
+The caller provides them, typically by echoing back the values from the `cipherMetadata` returned by `EncryptData`.
 
 | Variable | Type | Description |
 | --- | --- | --- |
-| `nonce` | Bytes | *(Optional)* Nonce to use for decryption. |
+| `nonce` | Bytes | Nonce to use for decryption. |
 | `aad` | Bytes | *(Optional)* Additional authenticated data bound to the ciphertext. |
 | `tag` | Bytes | *(Optional)* The authentication tag to verify during decryption. |
 
@@ -333,6 +331,6 @@ On the client side, errors may be caused in the following scenarios:
 - EncryptData / DecryptData:
     - The provided `keySource` variant does not match the profile (e.g. `rawKey` supplied for a profile that expects a `keyId`, or vice versa).
     - The length of the supplied or referenced key is out of the permitted profile boundaries.
-    - A nonce is supplied although the profile's `NonceStrategy` does not allow user-provided nonces.
+    - The nonce required for the operation is missing (the caller must always supply it).
     - The referenced key identifier cannot be resolved by the key storage backend.
     - The ciphertext or authentication tag fails verification during decryption.
