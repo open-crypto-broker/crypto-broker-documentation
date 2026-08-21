@@ -122,10 +122,10 @@ Depending on the requested operation, the server validates that:
     - The subject's public key and the issuer's private key satisfy the key-size constraints defined in the profile.
     - The requested certificate validity lies within the boundaries permitted by the profile.
 - For `EncryptData` and `DecryptData`:
-    - The supplied key source matches the profile: raw key material for caller-managed profiles (no key storage backend), or a key identifier for broker-managed profiles.
+    - The supplied key source matches the profile: raw key material for caller-managed profiles (no key storage backend), or a key identifier that the broker resolves and retrieves from the KMS for profiles with a key storage backend.
     - The supplied or referenced key satisfies the key-size constraints defined in the profile.
-    - Any caller-supplied nonce is only accepted when the profile permits it.
-    - For `DecryptData`, the ciphertext and authentication tag are verified against the supplied decryption parameters. In KMS-managed flows these parameters may be resolved by the broker rather than supplied by the caller.
+    - The caller supplies the nonce required for the operation.
+    - For `DecryptData`, the ciphertext and authentication tag are verified against the decryption parameters supplied by the caller.
 
 Requests that violate any of these rules are rejected with a verbose error identifying the failed check.
 
