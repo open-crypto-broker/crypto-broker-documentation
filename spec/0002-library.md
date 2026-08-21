@@ -6,6 +6,8 @@ The Crypto Broker service provides remote cryptographic operations over gRPC, in
 
 - Hashing arbitrary binary data: `HashData` API
 - Generating X.509 certificates based on Certificate Signing Requests (CSRs): `SignCertificate` API
+- Signing arbitrary binary data: `SignData` API
+- Verifying signatures over arbitrary binary data: `VerifyData` API
 - Encrypting arbitrary binary data: `EncryptData` API
 - Decrypting previously encrypted data: `DecryptData` API
 
@@ -28,6 +30,8 @@ The Crypto Broker exposes two separate gRPC services, defined in `messages.proto
 - `CryptoGrpc` — the production service used by client applications. It exposes the cryptographic operations as gRPC methods:
     - `HashData` — computes a cryptographic hash over arbitrary input.
     - `SignCertificate` — issues an X.509 certificate from a CSR.
+    - `SignData` — produces a digital signature over arbitrary input.
+    - `VerifyData` — verifies a digital signature over arbitrary input.
     - `EncryptData` — encrypts arbitrary input using authenticated symmetric encryption.
     - `DecryptData` — decrypts data previously produced by `EncryptData`.
 - `CryptoGrpcDev` — a development/diagnostics service that is not intended for production application use. It exposes:
@@ -104,6 +108,66 @@ The `SignCertificate` API returns a response body `SignCertificateResponse`, fro
 | `metadata` | Map | Metadata about the Crypto Broker request/response. |
 
 All other values like validity, signature algorithm etc. can be extracted from the certificate itself.
+
+#### `SignData`
+
+The `SignData` API function allows clients to produce a digital signature over arbitrary data using the signing mode and algorithms specified in a profile. The client-side function maps directly to the `SignData` RPC method of the `CryptoGrpc` gRPC service.
+
+The profile selects one of three signing modes, enabling a controlled migration from traditional to post-quantum cryptography:
+
+- `legacy` — a traditional signature only (e.g. RSA or ECDSA).
+- `hybrid` — a composite signature binding a traditional algorithm **and** a post-quantum algorithm (ML-DSA); both component signatures must verify.
+- `post-quantum` — a post-quantum signature only (e.g. ML-DSA or SLH-DSA).
+
+The signing key is supplied via a `keySource` (see [`SignKeySource` message](#signkeysource-message)).
+For `legacy` and `post-quantum` modes a single key is used; for `hybrid` mode two component keys are supplied (the traditional key and the ML-DSA key).
+As with `EncryptData`, each key is either a `keyId` (KMS-backed) or `rawKey` (caller-managed), governed by whether the profile has a key storage backend.
+
+##### `SignData` Input
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `profile` | String | Name of the profile (e.g., `Default`, `PCI-DSS`). |
+| `keySource` | Map | Signing key material, given as a [`SignKeySource`](#signkeysource-message). A single key for `legacy`/`post-quantum`, or a list of component keys for `hybrid`. |
+| `input` | Bytes | Arbitrary input to be signed (e.g. an image, ZIP archive or PDF document). |
+| `signatureFormat` | Enum | *(Optional)* Output encoding of the signature: `RAW` (default), `DER`, `PEM` or `CMS`. `CMS` produces an [RFC 5652](https://www.rfc-editor.org/rfc/rfc5652) SignedData structure. |
+| `metadata` | Map | *(Optional)* Metadata about the Crypto Broker request/response. |
+
+##### `SignData` Output
+
+The `SignData` API returns a response body `SignDataResponse`, from which the following values can be extracted.
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `signature` | Bytes | The digital signature over the provided input, encoded according to the requested `signatureFormat`. |
+| `descriptor` | Map | Self-describing descriptor of how the signature was produced (see [`descriptor` message](#descriptor-message)). Should be persisted alongside the signature. |
+| `metadata` | Map | Metadata about the Crypto Broker request/response. |
+
+#### `VerifyData`
+
+The `VerifyData` API function allows clients to verify a digital signature previously produced by `SignData` (or by a compatible signer) over arbitrary data. The client-side function maps directly to the `VerifyData` RPC method of the `CryptoGrpc` gRPC service.
+
+The caller provides the same signing mode via the profile and supplies the corresponding public key material via `keySource`. For `hybrid` mode, both component public keys are supplied and both component signatures must verify for the result to be valid.
+
+##### `VerifyData` Input
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `profile` | String | Name of the profile (e.g., `Default`, `PCI-DSS`). |
+| `keySource` | Map | Public key material, given as a [`SignKeySource`](#signkeysource-message). A single key for `legacy`/`post-quantum`, or a list of component keys for `hybrid`. |
+| `input` | Bytes | The original input over which the signature was produced. |
+| `signature` | Bytes | The signature to verify, encoded according to `signatureFormat`. |
+| `signatureFormat` | Enum | *(Optional)* Encoding of the supplied signature: `RAW` (default), `DER`, `PEM` or `CMS`. |
+| `metadata` | Map | *(Optional)* Metadata about the Crypto Broker request/response. |
+
+##### `VerifyData` Output
+
+The `VerifyData` API returns a response body `VerifyDataResponse`, from which the following values can be extracted.
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `valid` | Boolean | `true` if the signature is valid for the given input and key material, `false` otherwise. A malformed signature, key-source mismatch or unsupported algorithm is reported as an error rather than `false`. |
+| `metadata` | Map | Metadata about the Crypto Broker request/response. |
 
 #### `EncryptData`
 
@@ -229,15 +293,15 @@ Deprecation warning attached to every response produced with a deprecated profil
 
 ## `descriptor` message
 
-Self-describing record of how a stored cryptographic artifact was produced, returned by the record-producing APIs (`HashData`, `SignCertificate`, `EncryptData`).
+Self-describing record of how a stored cryptographic artifact was produced, returned by the record-producing APIs (`HashData`, `SignCertificate`, `SignData`, `EncryptData`).
 Applications **should persist this descriptor verbatim alongside the value**, so that the record stays verifiable and migratable even after the underlying profile changes, and without access to `Profiles.yaml`.
 See the [Profile Change and Migration Guidance ADR](../adr/overall/0013-profile-change-migration-guidance.md) for the rationale.
 
 | Variable | Type | Description |
 | --- | --- | --- |
 | `profile` | String | Name of the profile that produced the artifact. |
-| `operation` | String | The API that produced the artifact (e.g. `HashData`, `SignCertificate`, `EncryptData`). |
-| `algorithm` | String | The concrete algorithm actually used (e.g. `sha3-512`, `aes-gcm`). |
+| `operation` | String | The API that produced the artifact (e.g. `HashData`, `SignCertificate`, `SignData`, `EncryptData`). |
+| `algorithm` | String | The concrete algorithm actually used (e.g. `sha3-512`, `ML-DSA-65`, `aes-gcm`). |
 
 ---
 
@@ -251,6 +315,22 @@ Which variant is valid is determined by the profile: a profile without a key sto
 | --- | --- | --- |
 | `keyId` | String | Identifier of an externally provisioned key that the broker resolves and retrieves from the key storage backend. Set for profiles with a `KMS`. |
 | `rawKey` | Bytes | Inline key material supplied by the caller. Set for caller-managed profiles without a `KMS`. |
+
+## `SignKeySource` message
+
+The `keySource` carries the key material for the `SignData` and `VerifyData` APIs.
+Exactly one of the two fields must be set, determined by the profile's signing mode:
+
+- `legacy` and `post-quantum` modes use `single`, a single [`KeySource`](#keysource-message).
+- `hybrid` mode uses `componentKeys`, an ordered list of [`KeySource`](#keysource-message) entries — the traditional key followed by the ML-DSA key.
+
+Each individual `KeySource` follows the same `keyId` vs. `rawKey` rule as above: a profile without a `KMS` requires `rawKey`, a profile with a `KMS` expects `keyId`.
+For `SignData` the key material is the private (signing) key; for `VerifyData` it is the public (verification) key.
+
+| Variable | Type | Description |
+| --- | --- | --- |
+| `single` | Map | A single [`KeySource`](#keysource-message). Used for `legacy` and `post-quantum` signing modes. |
+| `componentKeys` | List of Maps | An ordered list of [`KeySource`](#keysource-message) entries (traditional key, then ML-DSA key). Used for `hybrid` signing mode. |
 
 ## `encryptMetadata` message
 
@@ -328,6 +408,12 @@ On the client side, errors may be caused in the following scenarios:
     - The public key given in the CA certificate does not match the private key.
     - The requested certificate validity is out of the permitted profile boundaries.
     - The length of the issuer's private key or the subject's public key is out of the permitted profile boundaries.
+- SignData / VerifyData:
+    - The provided `keySource` does not match the profile's signing mode (e.g. a single key supplied for a `hybrid` profile that expects component keys, or vice versa).
+    - The provided `keySource` variant does not match the profile (e.g. `rawKey` supplied for a profile that expects a `keyId`, or vice versa).
+    - The signing algorithm in the profile does not match the algorithm of the supplied or referenced key.
+    - The length of a supplied or referenced key is out of the permitted profile boundaries.
+    - VerifyData: the signature is malformed or cannot be parsed in the given `signatureFormat`.
 - EncryptData / DecryptData:
     - The provided `keySource` variant does not match the profile (e.g. `rawKey` supplied for a profile that expects a `keyId`, or vice versa).
     - The length of the supplied or referenced key is out of the permitted profile boundaries.
