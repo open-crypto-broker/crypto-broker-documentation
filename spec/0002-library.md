@@ -119,7 +119,7 @@ Encryption parameters are supplied via `encryptMetadata`: the caller always prov
 | `profile` | String | Name of the profile (e.g., `Default`, `PCI-DSS`). |
 | `keySource` | Map | Key material to use, given as a [`KeySource`](#keysource-message). Either a `keyId` (KMS-backed) or `rawKey` (caller-managed). |
 | `plaintext` | Bytes | Arbitrary input to be encrypted. |
-| `encryptMetadata` | Map | *(Optional)* Caller-supplied encryption parameters (see [`encryptMetadata` message](#encryptmetadata-message)), e.g. nonce and AAD. |
+| `encryptMetadata` | Map | Caller-supplied encryption parameters (see [`encryptMetadata` message](#encryptmetadata-message)), e.g. nonce and AAD. |
 | `metadata` | Map | *(Optional)* Metadata about the Crypto Broker request/response. |
 
 ##### `EncryptData` Output
@@ -145,7 +145,7 @@ The caller provides the same `keySource` variant expected by the profile, and su
 | `profile` | String | Name of the profile (e.g., `Default`, `PCI-DSS`). |
 | `keySource` | Map | Key material to use, given as a [`KeySource`](#keysource-message). Either a `keyId` (KMS-backed) or `rawKey` (caller-managed). |
 | `ciphertext` | Bytes | The encrypted data to be decrypted. |
-| `decryptMetadata` | Map | *(Optional)* Caller-supplied decryption parameters (see [`decryptMetadata` message](#decryptmetadata-message)), e.g. nonce, AAD and authentication tag. |
+| `decryptMetadata` | Map | Caller-supplied decryption parameters (see [`decryptMetadata` message](#decryptmetadata-message)), e.g. nonce, AAD and authentication tag. |
 | `metadata` | Map | *(Optional)* Metadata about the Crypto Broker request/response. |
 
 ##### `DecryptData` Output
