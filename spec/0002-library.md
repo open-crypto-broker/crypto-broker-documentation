@@ -274,7 +274,6 @@ It encapsulates everything the caller may need besides the ciphertext itself: `k
 | `aad` | Bytes | *(Optional)* The additional authenticated data bound to the ciphertext. |
 | `tag` | Bytes | *(Optional)* The authentication tag produced by the authenticated encryption algorithm. |
 
-
 ## `decryptMetadata` message
 
 Caller-supplied decryption parameters for the `DecryptData` API, symmetric to [`encryptMetadata`](#encryptmetadata-message).
