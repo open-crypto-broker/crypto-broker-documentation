@@ -131,6 +131,7 @@ The `EncryptData` API returns a response body `EncryptDataResponse`, from which 
 | `ciphertext` | Bytes | The encrypted data. |
 | `cipherMetadata` | Map | Metadata accompanying the ciphertext (see [`cipherMetadata` message](#ciphermetadata-message)). Encapsulates the key identifier used and, where the caller must retain them, the nonce, AAD and authentication tag needed to decrypt later. |
 | `metadata` | Map | Metadata about the Crypto Broker request/response. |
+| `descriptor` | Map | Self-describing descriptor of how the ciphertext was produced (see [`descriptor` message](#descriptor-message)). Should be persisted alongside the ciphertext. |
 
 #### `DecryptData`
 
@@ -272,7 +273,7 @@ It encapsulates everything the caller may need besides the ciphertext itself: `k
 | `nonce` | Bytes | The nonce actually used for encryption. |
 | `aad` | Bytes | *(Optional)* The additional authenticated data bound to the ciphertext. |
 | `tag` | Bytes | *(Optional)* The authentication tag produced by the authenticated encryption algorithm. |
-| `descriptor` | Map | Self-describing descriptor of how the ciphertext was produced (see [`descriptor` message](#descriptor-message)). Should be persisted alongside the ciphertext. |
+
 
 ## `decryptMetadata` message
 
