@@ -51,6 +51,10 @@ These specifications are suitable entry points for developers, which want to int
 
 The [deployment repository](https://github.com/open-crypto-broker/crypto-broker-deployment) describes and shows how the Crypto Broker Server and the different Crypto Broker Clients can be deployed to the specified targets.
 
+## Supply Chain Security
+
+The targeted [SLSA](https://slsa.dev/) build level and the steps to independently verify the provenance and SBOM of released artifacts are documented in [supply-chain-security.md](supply-chain-security.md).
+
 ## Support, Feedback, Contributing
 
 This project is open to feature requests/suggestions, bug reports etc. via [GitHub issues](https://github.com/open-crypto-broker/crypto-broker-documentation/issues). Contribution and feedback are encouraged and always welcome. For more information about how to contribute, the project structure, as well as additional contribution information, see our [Contribution Guidelines](CONTRIBUTING.md).
