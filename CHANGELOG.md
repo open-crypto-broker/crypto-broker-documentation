@@ -3,6 +3,27 @@
 The list of commits in this changelog is automatically generated in the release process.
 The commits follow the Conventional Commit specification.
 
+## [0.5.0] - 2026-08-26
+
+### 🚀 Features
+
+- SLSA level 3 documentation (#48)
+- Adjust nonce strategy for encryptData and decryptData (#43)
+- Profile change and migration guidance (#38)
+- Add self-describing fromat and deprecation message (#42)
+
+### 🐛 Bug Fixes
+
+- Make EncryptMetadata and DecryptMetadata non optional (#44)
+
+### 📚 Documentation
+
+- Add additional SKI algorithm support (#40)
+
+### ⚙️ Miscellaneous Tasks
+
+- Adjust descriptor level for EncryptDataResponse (#47)
+
 ## [0.4.0] - 2026-07-24
 
 ### 🚀 Features
