@@ -6,6 +6,7 @@ The Crypto Broker server provides remote cryptographic operations over gRPC, inc
 
 - Hashing arbitrary binary data.
 - Signing X.509 certificates based on Certificate Signing Requests (CSRs).
+- Signing and verifying arbitrary binary data, with selectable legacy, hybrid and post-quantum signing modes.
 - Encrypting and decrypting arbitrary binary data using authenticated symmetric encryption.
 
 This specification describes the observable behavior and processing contract of the Crypto Broker server: the services it exposes, how it processes and validates requests, the security guarantees it provides, and how it can be operated and observed.
@@ -40,6 +41,8 @@ The production service is always available and exposes the cryptographic operati
 
 - `HashData` — computes a cryptographic hash over arbitrary input using the algorithm defined in the selected profile.
 - `SignCertificate` — issues an X.509 certificate from a CSR using the credentials and constraints defined in the selected profile.
+- `SignData` — produces a digital signature over arbitrary input using the signing mode (legacy, hybrid or post-quantum) and algorithms defined in the selected profile.
+- `VerifyData` — verifies a digital signature over arbitrary input using the selected profile.
 - `EncryptData` — encrypts arbitrary input using the authenticated symmetric encryption algorithm defined in the selected profile.
 - `DecryptData` — decrypts data previously produced by `EncryptData` using the selected profile.
 
@@ -94,7 +97,7 @@ It is recommended that the successor referenced by `replacedBy` should point to 
 
 ### Self-describing responses
 
-Record-producing operations (`HashData`, `SignCertificate`, `EncryptData`) return a self-describing descriptor alongside the result, capturing the profile, the operation and the concrete algorithm actually used.
+Record-producing operations (`HashData`, `SignCertificate`, `SignData`, `EncryptData`) return a self-describing descriptor alongside the result, capturing the profile, the operation and the concrete algorithm actually used.
 Applications are expected to persist this descriptor with the stored artifact so that records remain verifiable and migratable across later profile changes.
 Editing the algorithms of an existing profile in place is a supported but breaking action: applications that compare freshly computed values against previously stored ones can silently break, so such changes should instead be performed as a rolling migration via a new profile and deprecation metadata.
 
@@ -121,6 +124,11 @@ Depending on the requested operation, the server validates that:
     - The signature algorithm in the profile is compatible with the provided key.
     - The subject's public key and the issuer's private key satisfy the key-size constraints defined in the profile.
     - The requested certificate validity lies within the boundaries permitted by the profile.
+- For `SignData` and `VerifyData`:
+    - The supplied key source matches the profile's signing mode: a single key for `legacy` and `post-quantum` modes, or component keys (traditional key plus ML-DSA key) for `hybrid` mode.
+    - The supplied key source matches the profile: raw key material for caller-managed profiles (no key storage backend), or a key identifier that the broker resolves and retrieves from the KMS for profiles with a key storage backend.
+    - The signing algorithm in the profile is compatible with the supplied or referenced key(s), and the key(s) satisfy the key-size constraints defined in the profile.
+    - For `VerifyData`, the signature is well-formed and can be parsed in the supplied signature format.
 - For `EncryptData` and `DecryptData`:
     - The supplied key source matches the profile: raw key material for caller-managed profiles (no key storage backend), or a key identifier that the broker resolves and retrieves from the KMS for profiles with a key storage backend.
     - The supplied or referenced key satisfies the key-size constraints defined in the profile.
@@ -147,6 +155,16 @@ The following algorithms are supported by the server. A given request may only u
 - Signature algorithms: RSA, ECDSA
 - Hash algorithms used for signing: SHA-256, SHA-384, SHA-512
 - Hash algorithms used for the Subject Key Identifier (`SKIHashAlg`): SHA-1, SHA-256, SHA-384, SHA-512, SHA3-256, SHA3-384, SHA3-512
+
+### Data signing (`SignData` / `VerifyData`)
+
+The signing algorithm is determined by the profile's signing mode:
+
+- **Legacy** — traditional signature algorithms: RSA (RSASSA-PSS, RSASSA-PKCS1-v1_5), ECDSA (P-256, P-384, P-521), EdDSA (Ed25519, Ed448)
+- **Post-quantum** — ML-DSA (ML-DSA-44, ML-DSA-65, ML-DSA-87) and SLH-DSA
+- **Hybrid** — composite signatures binding ML-DSA with a traditional algorithm (e.g. `MLDSA65-ECDSA-P256-SHA512`, `MLDSA65-RSA3072-PSS-SHA512`), following *Composite ML-DSA*; both component signatures must verify
+- Hash algorithms used for signing: SHA-256, SHA-384, SHA-512
+- Signature output formats: `RAW`, `DER`, `PEM`, `CMS` ([RFC 5652](https://www.rfc-editor.org/rfc/rfc5652) SignedData)
 
 ### Encryption (`EncryptData` / `DecryptData`)
 
@@ -218,10 +236,10 @@ Error reporting is verbose and stage-aware: the client is told which part of the
     - The production service and the health service are registered. In a development environment, the development service is additionally registered.
 
 1. **Requests**
-    - A client sends a `HashData`, `SignCertificate`, `EncryptData` or `DecryptData` request via gRPC.
+    - A client sends a `HashData`, `SignCertificate`, `SignData`, `VerifyData`, `EncryptData` or `DecryptData` request via gRPC.
     - The server enforces message-size limits, retrieves the referenced profile and validates the input against it.
     - The server selects the cryptographic algorithm and parameters based on the profile and performs the operation.
-    - The server returns the response (hash value, signed certificate, ciphertext or plaintext) together with metadata, or a verbose error.
+    - The server returns the response (hash value, signed certificate, signature, verification result, ciphertext or plaintext) together with metadata, or a verbose error.
 
 1. **Error handling**
     - Errors are returned as described in [Error Handling](#error-handling).
