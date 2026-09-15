@@ -80,6 +80,25 @@ Defines settings for symmetric encryption and decryption. This section governs b
 | `NonceStrategy` | String | How the nonce is obtained. Only `user-provided` is supported: the caller always supplies the nonce via the API and owns its uniqueness. |
 | `TagLength` | Int | Length of the authentication tag in bits. For `aes-gcm`, allowed values are `96`, `104`, `112`, `120`, `128`, with `128` recommended. Shorter tags (`64`, `32`) are only approved for restricted applications per [NIST SP 800-38D](https://doi.org/10.6028/NIST.SP.800-38D) Appendix C and should not be used in general-purpose profiles. |
 
+## API: `SignData` and `VerifyData`
+
+Defines settings for signing and verifying arbitrary data. This section governs both the `SignData` and `VerifyData` APIs, which share the same signing mode, algorithms and key constraints.
+
+The `SigningMode` field selects one of three modes, enabling a controlled migration from traditional to post-quantum cryptography.
+Operators can move a profile from `legacy` to `hybrid` to `post-quantum` over time (as a rolling migration via a successor profile; see [`Deprecation`](#deprecation)).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `SigningMode` | String | The signing mode: `legacy` (traditional algorithm only), `hybrid` (composite traditional + ML-DSA signature), or `post-quantum` (post-quantum algorithm only). |
+| `SignAlg` | String | The signing algorithm. For `legacy`: a traditional algorithm (e.g. `RSA`, `ECDSA`, `Ed25519`). For `post-quantum`: a post-quantum algorithm (e.g. `ML-DSA-65`, `SLH-DSA`). For `hybrid`: a composite identifier binding both (e.g. `MLDSA65-ECDSA-P256-SHA512`, `MLDSA65-RSA3072-PSS-SHA512`). |
+| `HashAlg` | String | The hash algorithm used in the signature (e.g., `SHA-256`, `SHA-512`). Not applicable to algorithms with a built-in hash (e.g. Ed25519). |
+| `SignatureFormat` | String | The default output format for produced signatures: `RAW`, `DER`, `PEM` or `CMS`. The caller may override it per request. `CMS` produces an [RFC 5652](https://www.rfc-editor.org/rfc/rfc5652) SignedData structure. |
+| `KeyConstraints` | Map | Defines allowed key size constraints per algorithm for the signing/verification key(s). For `hybrid` mode, both the traditional and the ML-DSA component algorithms are listed. |
+
+> Note: For `hybrid` mode, the API request carries two component keys (the traditional key and the ML-DSA key); both component signatures must verify for `VerifyData` to return `valid = true`. The composite construction follows the *Composite ML-DSA* specification (see the [SignData/VerifyData API ADR](../adr/overall/0015-sign-verify-data-api.md)).
+
+The `KeyConstraints` map is keyed by algorithm identifier (e.g. `RSA`, `ECDSA`, `ML-DSA-65`), each mapping to an entry with optional `MinKeySize` and `MaxKeySize` bounds in bits, using the same structure as the [`SignCertificate` key constraint entries](#algorithm-key-constraint-entry). Post-quantum algorithms with fixed parameter sets may omit the size bounds.
+
 ## API: `SignCertificate`
 
 Defines settings for signing X.509 certificate signing requests (CSR).
