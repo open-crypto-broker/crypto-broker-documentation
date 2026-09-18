@@ -121,7 +121,7 @@ The profile selects one of three signing modes, enabling a controlled migration 
 
 The signing key is supplied via a `keySource` (see [`SignKeySource` message](#signkeysource-message)).
 For `legacy` and `post-quantum` modes a single key is used; for `hybrid` mode two component keys are supplied (the traditional key and the ML-DSA key).
-As with `EncryptData`, each key is either a `keyId` (KMS-backed) or `rawKey` (caller-managed), governed by whether the profile has a key storage backend.
+As with `EncryptData`, each key is either a `keyId` (KMS-backed) or `rawKey` (caller-managed), governed by whether the global settings define a key storage backend.
 
 ##### `SignData` Input
 
@@ -145,9 +145,11 @@ The `SignData` API returns a response body `SignDataResponse`, from which the fo
 
 #### `VerifyData`
 
-The `VerifyData` API function allows clients to verify a digital signature previously produced by `SignData` (or by a compatible signer) over arbitrary data. The client-side function maps directly to the `VerifyData` RPC method of the `CryptoGrpc` gRPC service.
+The `VerifyData` API function allows clients to verify a digital signature previously produced by `SignData` (or by a compatible signer) over arbitrary data.
+The client-side function maps directly to the `VerifyData` RPC method of the `CryptoGrpc` gRPC service.
 
-The caller provides the same signing mode via the profile and supplies the corresponding public key material via `keySource`. For `hybrid` mode, both component public keys are supplied and both component signatures must verify for the result to be valid.
+The caller provides the same signing mode via the profile and supplies the corresponding public key material via `keySource`.
+For `hybrid` mode, both component public keys are supplied and both component signatures must verify for the result to be valid.
 
 ##### `VerifyData` Input
 
@@ -310,7 +312,8 @@ See the [Profile Change and Migration Guidance ADR](../adr/overall/0013-profile-
 
 The `keySource` carries the key material for the `EncryptData` and `DecryptData` APIs.
 Exactly one of the two fields must be set.
-Which variant is valid is determined by the profile: a profile without a key storage backend (`KMS`) requires `rawKey`, while a profile with a `KMS` expects `keyId`.
+Which variant is valid is determined by the general settings: if there is no key storage backend (`KMS`) defined, `rawKey` is required.
+If a `KMS` is defined in the general settings, `keyId` is expected.
 
 | Variable | Type | Description |
 | --- | --- | --- |
@@ -325,7 +328,8 @@ Exactly one of the two fields must be set, determined by the profile's signing m
 - `legacy` and `post-quantum` modes use `single`, a single [`KeySource`](#keysource-message).
 - `hybrid` mode uses `componentKeys`, an ordered list of [`KeySource`](#keysource-message) entries — the traditional key followed by the ML-DSA key.
 
-Each individual `KeySource` follows the same `keyId` vs. `rawKey` rule as above: a profile without a `KMS` requires `rawKey`, a profile with a `KMS` expects `keyId`.
+Each individual `KeySource` follows the same `keyId` vs. `rawKey` rule as above: a global setting without a `KMS` requires `rawKey`, a global setting with a `KMS` expects `keyId`.
+In other words, the presence of a KMS in the global settings dictates which variant must be used.
 For `SignData` the key material is the private (signing) key; for `VerifyData` it is the public (verification) key.
 
 | Variable | Type | Description |
@@ -410,12 +414,12 @@ On the client side, errors may be caused in the following scenarios:
     - The length of the issuer's private key or the subject's public key is out of the permitted profile boundaries.
 - SignData / VerifyData:
     - The provided `keySource` does not match the profile's signing mode (e.g. a single key supplied for a `hybrid` profile that expects component keys, or vice versa).
-    - The provided `keySource` variant does not match the profile (e.g. `rawKey` supplied for a profile that expects a `keyId`, or vice versa).
+    - The provided `keySource` variant does not match the general settings for the KSM (e.g. `rawKey` supplied for a KSM configured setting, or vice versa).
     - The signing algorithm in the profile does not match the algorithm of the supplied or referenced key.
     - The length of a supplied or referenced key is out of the permitted profile boundaries.
     - VerifyData: the signature is malformed or cannot be parsed in the given `signatureFormat`.
 - EncryptData / DecryptData:
-    - The provided `keySource` variant does not match the profile (e.g. `rawKey` supplied for a profile that expects a `keyId`, or vice versa).
+    - The provided `keySource` variant does not match the general settings for the KSM (e.g. `rawKey` supplied for a KSM configured setting, or vice versa).
     - The length of the supplied or referenced key is out of the permitted profile boundaries.
     - The nonce required for the operation is missing (the caller must always supply it).
     - The referenced key identifier cannot be resolved by the key storage backend.

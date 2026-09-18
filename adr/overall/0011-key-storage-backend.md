@@ -20,17 +20,17 @@ There are fundamentally two ways to make this material available, and which one 
   This enables a more algorithm-agnostic API where the application supplies only a key-id (and optionally a minimal set of parameters), while the Crypto Broker derives or manages the remaining material (e.g. nonce, AAD) itself.
   This requires key material to persist securely across requests, and different deployment environments require different key management systems (KMS), such as OpenBao or OpenKCM.
 
-Whether a KMS is used is therefore not a global, hard-coded property of the Crypto Broker but a per-**profile** decision:
+Whether a KMS is used can be defined in the global settings of the **Profiles.yaml** file of the Crypto Broker:
 
-* If a profile specifies **no KMS**, the Crypto Broker cannot store anything; for encrypt/decrypt operations the application must provide all material (raw key, nonce, AAD).
-* If a profile specifies a **KMS**, a hybrid approach becomes possible: the application references key material via a key-id and the Crypto Broker provides/manages the remaining parameters (e.g. nonce, AAD).
+* If the global settings do not specify a **KMS**, the Crypto Broker cannot store anything; for encrypt/decrypt operations the application must provide all material (raw key, nonce, AAD).
+* If a **KMS** is specified in the global settings, a hybrid approach becomes possible: the application references key material via a key-id and the Crypto Broker provides/manages the remaining parameters (e.g. nonce, AAD).
 
-This ADR therefore needs to decide how the Crypto Broker integrates an **optional** key storage backend, such that profiles requiring a KMS can select among multiple implementations, while profiles without a KMS keep the broker stateless.
+This ADR therefore needs to decide how the Crypto Broker integrates an **optional** key storage backend, such that deployments requiring a KMS can select among multiple implementations, while deployments without a KMS keep the broker stateless.
 A single, hard-coded key storage implementation would limit the Crypto Broker's flexibility and adoption across diverse infrastructure setups.
 
 ## Decision Drivers
 
-* KMS support must be optional and selectable per profile (caller-managed vs. broker-managed)
+* KMS support must be optional and selectable per global settings (caller-managed vs. broker-managed)
 * Support for multiple key management backends (OpenBao, OpenKCM, etc.)
 * Users should be able to choose which backend fits their environment
 * Clean separation of concerns between cryptographic operations and key management
@@ -44,13 +44,13 @@ A single, hard-coded key storage implementation would limit the Crypto Broker's 
 
 ## Decision Outcome
 
-Chosen option: "Pluggable KMS Abstraction Layer", because it provides a unified interface for key management while allowing different backend implementations to be swapped in depending on the deployment environment.
-The abstraction layer is engaged only when a profile selects a KMS; profiles without a KMS keep the Crypto Broker stateless and rely on caller-managed key material.
+Chosen option: "Pluggable KMS Abstraction Layer", because it provides an interface for key retrieval while allowing different backend implementations to be swapped in depending on the deployment environment.
+The abstraction layer is engaged only when a KMS is defined in the global settings; without a KMS defined in the global settings the Crypto Broker remains stateless and relies on caller-managed key material.
 
 ### Consequences
 
 * Good, because users can decide which KMS backend to use based on their infrastructure
-* Good, because KMS support stays optional and is driven per profile (caller-managed or broker-managed)
+* Good, because KMS support stays optional and is driven per global settings (caller-managed or broker-managed)
 * Good, because new backends can be added without changing the Crypto Broker core logic
 * Good, because the abstraction layer enforces a consistent key lifecycle across all backends
 * Bad, because all key features (generate, import, expire, delete/archive, rotate) must be implemented for each backend
@@ -113,7 +113,7 @@ The Crypto Broker Server gains statefulness and manages keys internally in local
 
 ### Pluggable KMS Abstraction Layer
 
-An abstraction layer within the Crypto Broker that defines a key management interface.
+An abstraction layer within the Crypto Broker that defines how to retrieve keys from various backend implementations.
 Multiple backend implementations (OpenBao, OpenKCM, file-based, etc.) can be plugged in via configuration.
 
 ```ascii
@@ -121,7 +121,7 @@ Multiple backend implementations (OpenBao, OpenKCM, file-based, etc.) can be plu
 │ Application │───────> │ Crypto Broker Server                 │
 │             │         │                                      │
 └─────────────┘         │  ┌────────────────────────────────┐  │
-                        │  │ Key Management Interface       │  │
+                        │  │ Key Retrieval Interface       │  │
                         │  └──────┬─────────┬───────────┬───┘  │
                         └─────────┼─────────┼───────────┼──────┘
                                   │         │           │
@@ -134,9 +134,7 @@ Multiple backend implementations (OpenBao, OpenKCM, file-based, etc.) can be plu
 
 * Good, because users can choose their preferred KMS backend
 * Good, because new backends can be added without modifying the core server
-* Good, because the interface enforces a consistent API for key operations across all backends
 * Good, because it keeps the Crypto Broker Server itself lightweight
-* Bad, because every key lifecycle operation must be implemented per backend
 * Bad, because higher implementation and maintenance effort
 * Bad, because backend-specific quirks may leak through the abstraction
 
