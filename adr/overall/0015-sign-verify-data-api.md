@@ -21,7 +21,9 @@ The API should therefore offer three signing modes:
 * **Hybrid** — a composite signature that binds a traditional algorithm **and** a post-quantum algorithm (ML-DSA) into a single, atomic signature, so a verifier must validate both components.
 * **Post-quantum** — a post-quantum signature algorithm only (ML-DSA per [FIPS 204](https://csrc.nist.gov/pubs/fips/204/final), or SLH-DSA per [FIPS 205](https://csrc.nist.gov/pubs/fips/205/final)).
 
-Like the encryption APIs, signing requires key material. The choice of key input is coupled to whether a key storage backend (KMS) is configured for the active profile, as defined in [ADR 0011](0011-key-storage-backend.md) and [ADR 0014](0014-kms.md). We therefore reuse the `KeySource` model introduced for [EncryptData/DecryptData](0012-encrypt-decrypt-api.md).
+Like the encryption APIs, signing requires key material.
+The choice of key input is coupled to whether a key storage backend (KMS) is defined in the global settings, as defined in [ADR 0011](0011-key-storage-backend.md) and [ADR 0014](0014-kms.md).
+We therefore reuse the `KeySource` model introduced for [EncryptData/DecryptData](0012-encrypt-decrypt-api.md).
 Hybrid mode is special: it needs **two** component keys (one traditional, one ML-DSA), so the request must be able to carry a list of key sources.
 
 ## Decision Drivers

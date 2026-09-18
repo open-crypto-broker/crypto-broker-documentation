@@ -14,10 +14,10 @@ To provide symmetric encryption capabilities (e.g. AES-GCM), new `EncryptData` a
 Symmetric encryption requires careful handling of keys, nonces, and additional authenticated data (AAD).
 The question is how much control the caller should have over these parameters versus how much the server should manage internally.
 
-This is directly coupled to whether a key storage backend (KMS) is configured for the active profile, as defined in [ADR 0011](0011-key-storage-backend.md):
+This is directly coupled to whether a key storage backend (KMS) is configured, as defined in [ADR 0011](0011-key-storage-backend.md):
 
-* **No KMS in the profile (caller-managed):** the Crypto Broker cannot store anything. The application must supply the key material inline (a raw key) together with the plaintext, and is responsible for any additional data (nonce/AAD). The broker acts as a validated, algorithm-specific wrapper.
-* **KMS in the profile (broker-managed):** the application references previously generated/imported key material via an identifier; the Crypto Broker resolves the key from the KMS and can manage additional parameters (e.g. nonce, AAD) itself, enabling a more agnostic call.
+* **No KMS defined in the global settings (caller-managed):** the Crypto Broker cannot store anything. The application must supply the key material inline (a raw key) together with the plaintext, and is responsible for any additional data (nonce/AAD). The broker acts as a validated, algorithm-specific wrapper.
+* **KMS defined in the global settings (broker-managed):** the application references previously generated/imported key material via an identifier; the Crypto Broker resolves the key from the KMS and can manage additional parameters (e.g. nonce, AAD) itself, enabling a more agnostic call.
 
 Because the same RPC must serve both situations, the request needs a key field that can carry **either** a reference to a managed key **or** raw key material. A plain `key-id` name no longer fits, since in the no-KMS case the value is the key itself rather than an identifier. We therefore model this as a `KeySource` (see [Decision Outcome](#decision-outcome)).
 
@@ -48,11 +48,11 @@ encryptData(profile, key-source, plaintext, [encrypt-metadata]) => ciphertext + 
 decryptData(profile, key-source, ciphertext, cipher-metadata) => plaintext
 ```
 
-* `key-source` is a `oneof` that carries **either** a `key_id` (when a KMS is configured in the profile) **or** a `raw_key` (when no KMS is configured). This replaces the previous `key-id` naming, which only described the KMS-backed case.
+* `key-source` is a `oneof` that carries **either** a `key_id` (when a KMS is defined in the global settings) **or** a `raw_key` (when no KMS is defined in the global settings). This replaces the previous `key-id` naming, which only described the KMS-backed case.
 * `encrypt-metadata` is an optional input structure for caller-supplied parameters such as nonce and AAD. When omitted, the Crypto Broker generates/derives them according to the profile.
 * `cipher-metadata` is returned alongside the ciphertext and carries the parameters required for decryption (e.g. the nonce actually used, AAD, tag), so the caller can pass it back unchanged to `decryptData`.
 
-Which `KeySource` variant is valid is governed by the profile: a profile **without** a KMS requires `raw_key`, a profile **with** a KMS expects `key_id`.
+Which `KeySource` variant is valid is governed by the global settings: if no KMS is defined in the global settings, `raw_key` is required; if a KMS is defined in the global settings, `key_id` is expected.
 
 ### Consequences
 
@@ -118,18 +118,19 @@ The existing profile YAML structure is extended with an `EncryptData` section to
 The optional `KMS` setting determines which `KeySource` variant is expected: when absent, the caller must supply a `raw_key`; when present, the caller references a managed key via `key_id`.
 
 ```yaml
-- Name: Default
-  Settings:
-    CryptoLibrary: native
-    KMS: openbao                 # NEW — optional; if unset, no key storage (caller-managed raw keys)
-  API:
-    EncryptData:                    # NEW
-      EncryptAlg: aes-gcm
-      KeyConstraints:
-        MinKeySize: 128
-        MaxKeySize: 256
-      NonceStrategy: random        # random | user-provided
-      TagLength: 128
+Settings:
+  CryptoLibrary: native
+  KMS: openbao                 # NEW — optional; if unset, no key storage (caller-managed raw keys)
+Profiles:
+  - Name: Default
+    API:
+      EncryptData:                    # NEW
+        EncryptAlg: aes-gcm
+        KeyConstraints:
+          MinKeySize: 128
+          MaxKeySize: 256
+        NonceStrategy: user-provided
+        TagLength: 128
 ```
 
 The Crypto Broker uses this profile to validate incoming requests:
