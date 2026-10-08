@@ -20,17 +20,18 @@ They typically include cryptographic library selection and key management config
 | Field | Type | Description |
 | --- | --- | --- |
 | `Settings` | Map | Global cryptographic settings, e.g. which cryptographic library to use or which key storage to use. |
+| `Profiles` | List | A list of profile definitions, each containing settings related to cryptographic operations supported by the Crypto Broker. |
 
 ---
 
-### `Settings`
+## `Settings`
 
 | Field | Type | Description |
 | --- | --- | --- |
 | `CryptoLibrary` | String | The underlying cryptographic library to use globally (e.g., `openssl` or `native`). |
 | `KMS` | String | *(Optional)* Global key storage backend from which the broker retrieves key material for all profiles (e.g., `OpenBao`). If unset, profiles are caller-managed and the broker keeps no key material; if set, the caller references an externally provisioned key by identifier, which the broker resolves and retrieves from the KMS. The broker performs no key lifecycle management (no create, import, or delete). See the [Key Storage Backend ADR](../adr/overall/0011-key-storage-backend.md) and [Key Resolution ADR](../adr/overall/0014-kms.md). |
 
-## Profile Structure
+## Profiles
 
 ### Top-Level Fields (per profile)
 
@@ -47,11 +48,11 @@ They typically include cryptographic library selection and key management config
 
 ---
 
-## `Name`
+### `Name`
 
 The `Name` field is a string that uniquely identifies the profile. It is used to select the profile when making API calls to the Crypto Broker. The name should be descriptive and reflect the intended use case or compliance standard (e.g., `Default`, `PCI-DSS`, `FIPS-140-3-128bit`).
 
-## `Deprecation`
+### `Deprecation`
 
 The optional `Deprecation` map marks a profile as outdated and names its successor, enabling the rolling-migration path described in the [Profile Change and Migration Guidance ADR](../adr/overall/0013-profile-change-migration-guidance.md).
 When present, the Crypto Broker attaches a deprecation warning to every response produced with this profile, so applications are informed in-band and can migrate before the profile is removed.
@@ -77,7 +78,7 @@ Example:
 
 > Note: `ReplacedBy` is a redirection pointer and therefore a downgrade vector. It should only ever point to an equal-or-stronger profile, and changes to it should be covered by change-management and audit controls, so that an attacker who can edit `Profiles.yaml` cannot steer clients toward a weaker profile.
 
-## API: `HashData`
+### API: `HashData`
 
 Configures how data should be hashed.
 
@@ -85,7 +86,7 @@ Configures how data should be hashed.
 | --- | --- | --- |
 | `HashAlg` | String | The hash algorithm to use (e.g., `SHA-512`, `SHA3-512`). |
 
-## API: `EncryptData` and `DecryptData`
+### API: `EncryptData` and `DecryptData`
 
 Defines settings for symmetric encryption and decryption. This section governs both the `EncryptData` and `DecryptData` APIs, which share the same algorithm and key constraints.
 
@@ -96,7 +97,7 @@ Defines settings for symmetric encryption and decryption. This section governs b
 | `NonceStrategy` | String | How the nonce is obtained. Only `user-provided` is supported: the caller always supplies the nonce via the API and owns its uniqueness. |
 | `TagLength` | Int | Length of the authentication tag in bits. For `aes-gcm`, allowed values are `96`, `104`, `112`, `120`, `128`, with `128` recommended. Shorter tags (`64`, `32`) are only approved for restricted applications per [NIST SP 800-38D](https://doi.org/10.6028/NIST.SP.800-38D) Appendix C and should not be used in general-purpose profiles. |
 
-## API: `SignData` and `VerifyData`
+### API: `SignData` and `VerifyData`
 
 Defines settings for signing and verifying arbitrary data. This section governs both the `SignData` and `VerifyData` APIs, which share the same signing mode, algorithms and key constraints.
 
@@ -115,7 +116,7 @@ Operators can move a profile from `legacy` to `hybrid` to `post-quantum` over ti
 
 The `KeyConstraints` map is keyed by algorithm identifier (e.g. `RSA`, `ECDSA`, `ML-DSA-65`), each mapping to an entry with optional `MinKeySize` and `MaxKeySize` bounds in bits, using the same structure as the [`SignCertificate` key constraint entries](#algorithm-key-constraint-entry). Post-quantum algorithms with fixed parameter sets may omit the size bounds.
 
-## API: `SignCertificate`
+### API: `SignCertificate`
 
 Defines settings for signing X.509 certificate signing requests (CSR).
 
@@ -132,7 +133,7 @@ Defines settings for signing X.509 certificate signing requests (CSR).
 
 > Note: A full list of valid strings for `KeyUsage` and `ExtendedKeyUsage` can be found in [RFC 5280 Section 4.2.1.3 Key Usage](https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.3) and [RFC 5280 Section 4.2.1.12 Extended Key Usage](https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.12).
 
-### `Validity`
+#### `Validity`
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -141,14 +142,14 @@ Defines settings for signing X.509 certificate signing requests (CSR).
 
 > Note: Time offset formats (e.g., `-1h`, `8760h`) are expected to be strings compatible with Go duration parsing. Please refer to [time.ParseDuration()](https://pkg.go.dev/time#ParseDuration) for the syntax definition.
 
-### `KeyConstraints`
+#### `KeyConstraints`
 
 | Field | Type | Description |
 | --- | --- | --- |
 | `Subject` | Map | This field specifies key constraints for the CSR's public key. |
 | `Issuer` | Map | This field specifies key constraints for the CA's public key. |
 
-#### `Subject/Issuer`
+##### `Subject/Issuer`
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -156,14 +157,14 @@ Defines settings for signing X.509 certificate signing requests (CSR).
 
 > Note: Not all supported algorithms need to be listed. If the key's algorithm is absent, implementations should throw an error.
 
-##### `Algorithm Key Constraint Entry`
+###### `Algorithm Key Constraint Entry`
 
 | Field | Type | Description |
 | --- | --- | --- |
 | `MinKeySize` | Int | Minimum allowable key size in bits. |
 | `MaxKeySize` | Int | Maximum allowable key size in bits. |
 
-### `BasicConstraints`
+#### `BasicConstraints`
 
 | Field | Type | Description |
 | --- | --- | --- |
