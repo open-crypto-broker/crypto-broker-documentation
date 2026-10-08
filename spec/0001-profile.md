@@ -10,10 +10,9 @@ In general, the generated certificate must be a valid X.509 certificate and comp
 
 ---
 
-## Global Settings
+## File Structure
 
-Global settings apply to all profiles defined in the `Profiles.yaml` file.
-They typically include cryptographic library selection and key management configuration.
+There are two main sections in the `Profiles.yaml` file: global settings and individual profiles.
 
 ### Top-Level Fields
 
