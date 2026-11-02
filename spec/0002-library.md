@@ -76,8 +76,8 @@ The hash value is returned in exactly one of the two fields depending on the req
 | --- | --- | --- |
 | `hash_value_hex` | String | Hash value of the provided input bytes as a hexadecimal string. Set when `output_format` is `HEX`. |
 | `hash_value_raw` | Bytes | Hash value of the provided input bytes as raw bytes. Set when `output_format` is `RAW`. |
-| `descriptor` | Map | Self-describing descriptor of how the hash was produced (see [`CryptoDescriptor` message](#CryptoDescriptor-message)). Should be persisted alongside the hash value. |
-| `metadata` | Map | [`Metadata` message](#Metadata-message) about the Crypto Broker request/response. |
+| `descriptor` | Map | Self-describing descriptor of how the hash was produced (see [`CryptoDescriptor` message](#cryptodescriptor-message)). Should be persisted alongside the hash value. |
+| `metadata` | Map | [`Metadata` message](#metadata-message) about the Crypto Broker request/response. |
 
 #### `SignCertificate`
 
@@ -97,7 +97,7 @@ The client-side function maps directly to the `SignCertificate` RPC method of th
 | `subject` | String | *(Optional)* Custom Subject Distinguished Name provided by the application. |
 | `crl_distribution_points` | List of Strings | *(Optional)* Custom CRL Distribution Point URLs provided by the application. Each URL must comply with [RFC 3986](https://datatracker.ietf.org/doc/html/rfc3986) |
 | `output_format` | Enum | *(Optional)* Output encoding of the signed certificate: `DER` (default) or `PEM`. |
-| `metadata` | Map | *(Optional)* [`Metadata` message](#Metadata-message) about the Crypto Broker request/response. |
+| `metadata` | Map | *(Optional)* [`Metadata` message](#metadata-message) about the Crypto Broker request/response. |
 
 ##### `SignCertificate` Output
 
@@ -108,8 +108,8 @@ The signed certificate is returned in exactly one of the two fields depending on
 | --- | --- | --- |
 | `pem` | String | PEM-encoded signed certificate. Set when `output_format` is `PEM`. |
 | `der` | Bytes | DER-encoded signed certificate. Set when `output_format` is `DER`. |
-| `descriptor` | Map | Self-describing descriptor of how the certificate was signed (see [`CryptoDescriptor` message](#CryptoDescriptor-message)). Should be persisted alongside the certificate. |
-| `metadata` | Map | [`Metadata` message](#Metadata-message) about the Crypto Broker request/response. |
+| `descriptor` | Map | Self-describing descriptor of how the certificate was signed (see [`CryptoDescriptor` message](#cryptodescriptor-message)). Should be persisted alongside the certificate. |
+| `metadata` | Map | [`Metadata` message](#metadata-message) about the Crypto Broker request/response. |
 
 All other values like validity, signature algorithm etc. can be extracted from the certificate itself.
 
@@ -136,7 +136,7 @@ As with `EncryptData`, each key is either a `key_id` (KMS-backed) or `raw_key` (
 | `key_source` | Map | Signing key material, given as a [`SignKeySource`](#signkeysource-message). A single key for `legacy`/`post-quantum`, or a list of component keys for `hybrid`. |
 | `input` | Bytes | Arbitrary input to be signed (e.g. an image, ZIP archive or PDF document). |
 | `signature_format` | Enum | *(Optional)* Output encoding of the signature: `RAW` (default), `DER`, `PEM` or `CMS`. `CMS` produces an [RFC 5652](https://www.rfc-editor.org/rfc/rfc5652) SignedData structure. |
-| `metadata` | Map | *(Optional)* [`Metadata` message](#Metadata-message) about the Crypto Broker request/response. |
+| `metadata` | Map | *(Optional)* [`Metadata` message](#metadata-message) about the Crypto Broker request/response. |
 
 ##### `SignData` Output
 
@@ -145,8 +145,8 @@ The `SignData` API returns a response body `SignDataResponse`, from which the fo
 | Variable | Type | Description |
 | --- | --- | --- |
 | `signature` | Bytes | The digital signature over the provided input, encoded according to the requested `signature_format`. |
-| `descriptor` | Map | Self-describing descriptor of how the signature was produced (see [`CryptoDescriptor` message](#CryptoDescriptor-message)). Should be persisted alongside the signature. |
-| `metadata` | Map | [`Metadata` message](#Metadata-message) about the Crypto Broker request/response. |
+| `descriptor` | Map | Self-describing descriptor of how the signature was produced (see [`CryptoDescriptor` message](#cryptodescriptor-message)). Should be persisted alongside the signature. |
+| `metadata` | Map | [`Metadata` message](#metadata-message) about the Crypto Broker request/response. |
 
 #### `VerifyData`
 
@@ -165,7 +165,7 @@ For `hybrid` mode, both component public keys are supplied and both component si
 | `input` | Bytes | The original input over which the signature was produced. |
 | `signature` | Bytes | The signature to verify, encoded according to `signature_format`. |
 | `signature_format` | Enum | *(Optional)* Encoding of the supplied signature: `RAW` (default), `DER`, `PEM` or `CMS`. |
-| `metadata` | Map | *(Optional)* [`Metadata` message](#Metadata-message) about the Crypto Broker request/response. |
+| `metadata` | Map | *(Optional)* [`Metadata` message](#metadata-message) about the Crypto Broker request/response. |
 
 ##### `VerifyData` Output
 
@@ -174,7 +174,7 @@ The `VerifyData` API returns a response body `VerifyDataResponse`, from which th
 | Variable | Type | Description |
 | --- | --- | --- |
 | `valid` | Boolean | `true` if the signature is valid for the given input and key material, `false` otherwise. A malformed signature, key-source mismatch or unsupported algorithm is reported as an error rather than `false`. |
-| `metadata` | Map | [`Metadata` message](#Metadata-message) about the Crypto Broker request/response. |
+| `metadata` | Map | [`Metadata` message](#metadata-message) about the Crypto Broker request/response. |
 
 #### `EncryptData`
 
@@ -193,7 +193,7 @@ Encryption parameters are supplied via `encrypt_metadata`: the caller always pro
 | `key_source` | Map | Key material to use, given as a [`KeySource`](#keysource-message). Either a `key_id` (KMS-backed) or `raw_key` (caller-managed). |
 | `plaintext` | Bytes | Arbitrary input to be encrypted. |
 | `encrypt_metadata` | Map | Caller-supplied encryption parameters (see [`EncryptMetadata` message](#encryptmetadata-message)), e.g. nonce and AAD. |
-| `metadata` | Map | *(Optional)* [`Metadata` message](#Metadata-message) about the Crypto Broker request/response. |
+| `metadata` | Map | *(Optional)* [`Metadata` message](#metadata-message) about the Crypto Broker request/response. |
 
 ##### `EncryptData` Output
 
@@ -203,8 +203,8 @@ The `EncryptData` API returns a response body `EncryptDataResponse`, from which 
 | --- | --- | --- |
 | `ciphertext` | Bytes | The encrypted data. |
 | `cipher_metadata` | Map | Metadata accompanying the ciphertext (see [`CipherMetadata` message](#ciphermetadata-message)). Encapsulates the key identifier used and, where the caller must retain them, the nonce, AAD and authentication tag needed to decrypt later. |
-| `descriptor` | Map | Self-describing descriptor of how the ciphertext was produced (see [`CryptoDescriptor` message](#CryptoDescriptor-message)). Should be persisted alongside the ciphertext. |
-| `metadata` | Map | [`Metadata` message](#Metadata-message) about the Crypto Broker request/response. |
+| `descriptor` | Map | Self-describing descriptor of how the ciphertext was produced (see [`CryptoDescriptor` message](#cryptodescriptor-message)). Should be persisted alongside the ciphertext. |
+| `metadata` | Map | [`Metadata` message](#metadata-message) about the Crypto Broker request/response. |
 
 #### `DecryptData`
 
@@ -221,7 +221,7 @@ The caller provides the same `key_source` variant expected by the profile, and s
 | `key_source` | Map | Key material to use, given as a [`KeySource`](#keysource-message). Either a `keyId` (KMS-backed) or `rawKey` (caller-managed). |
 | `ciphertext` | Bytes | The encrypted data to be decrypted. |
 | `decrypt_metadata` | Map | Caller-supplied decryption parameters (see [`DecryptMetadata` message](#decryptmetadata-message)), e.g. nonce, AAD and authentication tag. |
-| `metadata` | Map | *(Optional)* [`Metadata` message](#Metadata-message) about the Crypto Broker request/response. |
+| `metadata` | Map | *(Optional)* [`Metadata` message](#metadata-message) about the Crypto Broker request/response. |
 
 ##### `DecryptData` Output
 
@@ -230,7 +230,7 @@ The `DecryptData` API returns a response body `DecryptDataResponse`, from which 
 | Variable | Type | Description |
 | --- | --- | --- |
 | `plaintext` | Bytes | The decrypted data. |
-| `metadata` | Map | [`Metadata` message](#Metadata-message) about the Crypto Broker request/response. |
+| `metadata` | Map | [`Metadata` message](#metadata-message) about the Crypto Broker request/response. |
 
 ---
 
@@ -248,14 +248,14 @@ It is provided by the development service `CryptoDevService` via the `Benchmark`
 
 | Variable | Type | Description |
 | --- | --- | --- |
-| `metadata` | Map | *(Optional)* [`Metadata` message](#Metadata-message) about the Crypto Broker request/response. |
+| `metadata` | Map | *(Optional)* [`Metadata` message](#metadata-message) about the Crypto Broker request/response. |
 
 ##### `Benchmark` Output
 
 | Variable | Type | Description |
 | --- | --- | --- |
 | `benchmark_results` | String | Results of the benchmark run. |
-| `metadata` | Map | [`Metadata` message](#Metadata-message) about the Crypto Broker request/response. |
+| `metadata` | Map | [`Metadata` message](#metadata-message) about the Crypto Broker request/response. |
 
 ---
 
@@ -279,8 +279,8 @@ Represents metadata associated with a Crypto Broker request or response.
 | Variable | Type | Description |
 | --- | --- | --- |
 | `id` | String | ID of the request, given as a UUID v4 in String format. |
-| `trace_context` | Map | *(Optional)* Trace context for manual propagation of distributed tracing information (see [`TraceContext`](#TraceContext-message)). |
-| `deprecation` | Map | *(Optional)* Deprecation warning (see [`DeprecationWarning`](#DeprecationWarning-message)). Set on every response produced with a deprecated profile. |
+| `trace_context` | Map | *(Optional)* Trace context for manual propagation of distributed tracing information (see [`TraceContext`](#tracecontext-message)). |
+| `deprecation` | Map | *(Optional)* Deprecation warning (see [`DeprecationWarning`](#deprecationwarning-message)). Set on every response produced with a deprecated profile. |
 
 ### `CryptoDescriptor` message
 
