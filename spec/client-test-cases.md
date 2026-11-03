@@ -48,8 +48,9 @@ Field names below use JS/protobuf spelling: for example, `csr` maps to Go `CSR`,
 | --- | --- | --- |
 | validation | Missing payload, or a Go zero-value payload. | Reject before gRPC. |
 | validation | Empty profile, or profile over 64 ASCII characters. | Reject with a profile error. |
-| validation | CSR, CA private key or CA certificate is missing or empty. | Reject with the field name. |
-| validation | CSR, CA private key or CA certificate exceeds 64 KiB. | Reject with the field name. |
+| validation | CSR or CA certificate is missing or empty. | Reject with the field name. |
+| validation | Go CA private key is missing or empty; JS key source is missing. | Reject with the field name. |
+| validation | CSR, CA certificate or Go CA private key exceeds 64 KiB; JS key ID exceeds 64 ASCII characters. | Reject with the field name. |
 | validation | Subject exceeds 1024 ASCII characters. | Reject with a subject error. |
 | validation | CRL distribution points exceed 16 entries, or an entry exceeds 2048 ASCII characters. | Reject with the field name or entry index. |
 | validation | JS receives a non-string CRL entry. | Reject with the entry index; Go's compiler prevents this input. |
