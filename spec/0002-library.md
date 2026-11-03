@@ -125,7 +125,7 @@ The profile selects one of three signing modes, enabling a controlled migration 
 - `post-quantum` — a post-quantum signature only (e.g. ML-DSA or SLH-DSA).
 
 The signing key is supplied via a `key_source` (see [`SignKeySource` message](#signkeysource-message)).
-For `legacy` and `post-quantum` modes a single key is used; for `hybrid` mode two component keys are supplied (the traditional key and the ML-DSA key).
+For `legacy` and `post-quantum` modes a single key is used; for `hybrid` mode two component keys are supplied (the traditional key and the post-quantum key).
 As with `EncryptData`, each key is either a `key_id` (KMS-backed) or `raw_key` (caller-managed), governed by whether the global settings define a key storage backend.
 
 ##### `SignData` Input
@@ -334,7 +334,7 @@ The `SignKeySource` carries the key material for the `SignCertificate`,`SignData
 Exactly one of the two fields must be set, determined by the profile's signing mode:
 
 - `legacy` and `post-quantum` modes use `single`, a single [`KeySource`](#keysource-message).
-- `hybrid` mode uses `componentKeys`, an ordered list of [`KeySource`](#keysource-message) entries — the traditional key followed by the ML-DSA key.
+- `hybrid` mode uses `componentKeys`, an ordered list of [`KeySource`](#keysource-message) entries — the traditional key followed by the post-quantum key.
 
 Each individual `KeySource` follows the same `key_id` vs. `raw_key` rule as above: a global setting without a `KMS` requires `raw_key`, a global setting with a `KMS` expects `key_id`.
 In other words, the presence of a KMS in the global settings dictates which variant must be used.
@@ -343,15 +343,15 @@ For `SignData` the key material is the private (signing) key; for `VerifyData` i
 | Variable | Type | Description |
 | --- | --- | --- |
 | `single` | Map | A single [`KeySource`](#keysource-message). Used for `legacy` and `post-quantum` signing modes. |
-| `component_keys` | List of Maps | An ordered list of [`KeySource`](#keysource-message) entries (traditional key, then ML-DSA key). Used for `hybrid` signing mode. |
+| `component_keys` | List of Maps | An ordered list of [`KeySource`](#keysource-message) entries (traditional key, then post-quantum key). Used for `hybrid` signing mode. |
 
 ### `ComponentKeys` message
 
-An ordered list of [`KeySource`](#keysource-message) entries used for `hybrid` signing mode. The traditional key comes first, followed by the ML-DSA key.
+An ordered list of [`KeySource`](#keysource-message) entries used for `hybrid` signing mode. The traditional key comes first, followed by the post-quantum key.
 
 | Variable | Type | Description |
 | --- | --- | --- |
-| `component_keys` | List of Maps | An ordered list of [`KeySource`](#keysource-message) entries (traditional key, then ML-DSA key). Used for `hybrid` signing mode. |
+| `component_keys` | List of Maps | An ordered list of [`KeySource`](#keysource-message) entries (traditional key, then post-quantum key). Used for `hybrid` signing mode. |
 
 ### `EncryptMetadata` message
 

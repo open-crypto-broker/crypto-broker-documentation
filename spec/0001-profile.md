@@ -105,7 +105,7 @@ Operators can move a profile from `legacy` to `hybrid` to `post-quantum` over ti
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `SigningMode` | String | The signing mode: `legacy` (traditional algorithm only), `hybrid` (composite traditional + ML-DSA signature), or `post-quantum` (post-quantum algorithm only). |
+| `SigningMode` | String | The signing mode: `legacy` (traditional algorithm only), `hybrid` (composite traditional + post-quantum signature), or `post-quantum` (post-quantum algorithm only). |
 | `SignAlg` | String | The signing algorithm. For `legacy`: a traditional algorithm (e.g. `RSA`, `ECDSA`, `Ed25519`). For `post-quantum`: a post-quantum algorithm (e.g. `ML-DSA-65`, `SLH-DSA`). For `hybrid`: a composite identifier binding both (e.g. `MLDSA65-ECDSA-P256-SHA512`, `MLDSA65-RSA3072-PSS-SHA512`). |
 | `HashAlg` | String | The hash algorithm used in the signature (e.g., `SHA-256`, `SHA-512`). Not applicable to algorithms with a built-in hash (e.g. Ed25519). |
 | `SignatureFormat` | String | The default output format for produced signatures: `RAW`, `DER`, `PEM` or `CMS`. The caller may override it per request. `CMS` produces an [RFC 5652](https://www.rfc-editor.org/rfc/rfc5652) SignedData structure. |
