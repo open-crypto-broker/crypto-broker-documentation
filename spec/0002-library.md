@@ -90,7 +90,7 @@ The client-side function maps directly to the `SignCertificate` RPC method of th
 | --- | --- | --- |
 | `profile` | String | Name of the profile (e.g., `Default`, `PCI-DSS`). |
 | `csr` | String | PEM-encoded CSR containing the public key of the subject. |
-| `ca_cert` | String | PEM-encoded certificate of the issuer containing the matching public key. |
+| `ca_cert` | String | *(Optional)* PEM-encoded certificate of the issuer containing the matching public key. Only needs to be provided in the "caller-managed" profile scenario and a "raw_key" from [`SignKeySource`](#signkeysource-message). Otherwise the CA certificate can be retrieved via the "key_id" from [`SignKeySource`](#signkeysource-message). |
 | `key_source` | Map | Signing key material, given as a [`SignKeySource`](#signkeysource-message). A single key for `legacy`/`post-quantum`, or a list of component keys for `hybrid`. |
 | `valid_not_before` | Uint64 | *(Optional)* Validity start as a Unix timestamp (seconds since epoch). |
 | `valid_not_after` | Uint64 | *(Optional)* Validity end as a Unix timestamp (seconds since epoch). |
