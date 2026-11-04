@@ -218,7 +218,7 @@ The caller provides the same `key_source` variant expected by the profile, and s
 | Variable | Type | Description |
 | --- | --- | --- |
 | `profile` | String | Name of the profile (e.g., `Default`, `PCI-DSS`). |
-| `key_source` | Map | Key material to use, given as a [`KeySource`](#keysource-message). Either a `keyId` (KMS-backed) or `rawKey` (caller-managed). |
+| `key_source` | Map | Key material to use, given as a [`KeySource`](#keysource-message). Either a `key_id` (KMS-backed) or `raw_key` (caller-managed). |
 | `ciphertext` | Bytes | The encrypted data to be decrypted. |
 | `decrypt_metadata` | Map | Caller-supplied decryption parameters (see [`DecryptMetadata` message](#decryptmetadata-message)), e.g. nonce, AAD and authentication tag. |
 | `metadata` | Map | *(Optional)* [`Metadata` message](#metadata-message) about the Crypto Broker request/response. |
