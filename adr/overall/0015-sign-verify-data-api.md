@@ -56,6 +56,7 @@ verifyData(profile, sign-key-source, data, signature, [signature-format]) => val
 
 * The **signing mode** (`legacy`, `hybrid`, `post-quantum`) and the concrete algorithms are defined in the profile's `SignData` section, not chosen by the caller. This preserves crypto-agility and lets an operator migrate from legacy to hybrid or post-quantum profiles.
 * `sign-key-source` reuses the [`KeySource`](0012-encrypt-decrypt-api.md) `oneof` (`key_id` for KMS-backed profiles, `raw_key` for caller-managed profiles). For **hybrid** mode it carries a list of component keys (`componentKeys`): the traditional key and the ML-DSA key. Legacy and post-quantum modes use a single key.
+* Caller-managed keys (`raw_key`) are transmitted DER-encoded: PKCS #8 for private keys and `SubjectPublicKeyInfo` for public keys, for all algorithms including ML-DSA. PEM decoding happens in the client libraries, so the server neither handles PEM labels nor guesses the key format.
 * `signature-format` is a caller-selectable enum (`RAW`, `DER`, `PEM`, `CMS`). `CMS` produces an [RFC 5652](https://www.rfc-editor.org/rfc/rfc5652) SignedData structure; the others carry the bare signature value in the requested encoding.
 * `signData` returns a `descriptor` (profile, operation, concrete algorithm) so the caller can persist it alongside the signature and stay migratable, consistent with the other record-producing APIs.
 * `verifyData` returns a boolean `valid` result; a malformed signature or key-source mismatch is reported as a verbose error rather than a silent `false`.

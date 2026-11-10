@@ -14,6 +14,7 @@ The Crypto Broker service provides remote cryptographic operations over gRPC, in
 This specification describes the behavior and message formats of the API endpoints for clients across any programming language.
 The library does not perform cryptographic operations locally.
 It delegates all such tasks to the Crypto Broker Server.
+The library only prepares the request payload, e.g. by converting PEM-encoded keys supplied by the application into the DER encoding expected by the server (see [Key encoding](#key-encoding)).
 
 ---
 
@@ -91,7 +92,7 @@ The client-side function maps directly to the `SignCertificate` RPC method of th
 | `profile` | String | Name of the profile (e.g., `Default`, `PCI-DSS`). |
 | `csr` | String | PEM-encoded CSR containing the public key of the subject. |
 | `ca_cert` | String | *(Optional)* PEM-encoded certificate of the issuer containing the matching public key. Only needs to be provided in the "caller-managed" profile scenario and a "raw_key" from [`SignKeySource`](#signkeysource-message). Otherwise the CA certificate can be retrieved via the "key_id" from [`SignKeySource`](#signkeysource-message). |
-| `key_source` | Map | Signing key material, given as a [`SignKeySource`](#signkeysource-message). A single key for `legacy`/`post-quantum`, or a list of component keys for `hybrid`. |
+| `key_source` | Map | Signing key material of the issuer (CA), given as a [`SignKeySource`](#signkeysource-message). A single key for `legacy`/`post-quantum`, or a list of component keys for `hybrid`. A `raw_key` is sent as a DER-encoded PKCS #8 private key (see [Key encoding](#key-encoding)). |
 | `valid_not_before` | Uint64 | *(Optional)* Validity start as a Unix timestamp (seconds since epoch). |
 | `valid_not_after` | Uint64 | *(Optional)* Validity end as a Unix timestamp (seconds since epoch). |
 | `subject` | String | *(Optional)* Custom Subject Distinguished Name provided by the application. |
@@ -133,7 +134,7 @@ As with `EncryptData`, each key is either a `key_id` (KMS-backed) or `raw_key` (
 | Variable | Type | Description |
 | --- | --- | --- |
 | `profile` | String | Name of the profile (e.g., `Default`, `PCI-DSS`). |
-| `key_source` | Map | Signing key material, given as a [`SignKeySource`](#signkeysource-message). A single key for `legacy`/`post-quantum`, or a list of component keys for `hybrid`. |
+| `key_source` | Map | Signing key material, given as a [`SignKeySource`](#signkeysource-message). A single key for `legacy`/`post-quantum`, or a list of component keys for `hybrid`. A `raw_key` is sent as a DER-encoded PKCS #8 private key (see [Key encoding](#key-encoding)). |
 | `input` | Bytes | Arbitrary input to be signed (e.g. an image, ZIP archive or PDF document). |
 | `signature_format` | Enum | *(Optional)* Output encoding of the signature: `RAW` (default), `DER`, `PEM` or `CMS`. `CMS` produces an [RFC 5652](https://www.rfc-editor.org/rfc/rfc5652) SignedData structure. |
 | `metadata` | Map | *(Optional)* [`Metadata` message](#metadata-message) about the Crypto Broker request/response. |
@@ -161,7 +162,7 @@ For `hybrid` mode, both component public keys are supplied and both component si
 | Variable | Type | Description |
 | --- | --- | --- |
 | `profile` | String | Name of the profile (e.g., `Default`, `PCI-DSS`). |
-| `key_source` | Map | Public key material, given as a [`SignKeySource`](#signkeysource-message). A single key for `legacy`/`post-quantum`, or a list of component keys for `hybrid`. |
+| `key_source` | Map | Public key material, given as a [`SignKeySource`](#signkeysource-message). A single key for `legacy`/`post-quantum`, or a list of component keys for `hybrid`. A `raw_key` is sent as a DER-encoded `SubjectPublicKeyInfo` public key (see [Key encoding](#key-encoding)). |
 | `input` | Bytes | The original input over which the signature was produced. |
 | `signature` | Bytes | The signature to verify, encoded according to `signature_format`. |
 | `signature_format` | Enum | *(Optional)* Encoding of the supplied signature: `RAW` (default), `DER`, `PEM` or `CMS`. |
@@ -318,7 +319,7 @@ Deprecation warning attached to every response produced with a deprecated profil
 
 ### `KeySource` message
 
-The `KeySource` carries the key material for the `EncryptData` and `DecryptData` APIs.
+The `KeySource` carries the key material for the `EncryptData` and `DecryptData` APIs and, wrapped in a [`SignKeySource`](#signkeysource-message), for the `SignCertificate`, `SignData` and `VerifyData` APIs.
 Exactly one of the two fields must be set.
 Which variant is valid is determined by the general settings: if there is no key storage backend (`KMS`) defined, `raw_key` is required.
 If a `KMS` is defined in the general settings, `key_id` is expected.
@@ -326,7 +327,7 @@ If a `KMS` is defined in the general settings, `key_id` is expected.
 | Variable | Type | Description |
 | --- | --- | --- |
 | `key_id` | String | Identifier of an externally provisioned key that the broker resolves and retrieves from the key storage backend. Set for profiles with a `KMS`. |
-| `raw_key` | Bytes | Inline key material supplied by the caller. Set for caller-managed profiles without a `KMS`. |
+| `raw_key` | Bytes | Inline key material supplied by the caller, encoded as described in [Key encoding](#key-encoding). Set for caller-managed profiles without a `KMS`. |
 
 ### `SignKeySource` message
 
@@ -338,7 +339,7 @@ Exactly one of the two fields must be set, determined by the profile's signing m
 
 Each individual `KeySource` follows the same `key_id` vs. `raw_key` rule as above: a global setting without a `KMS` requires `raw_key`, a global setting with a `KMS` expects `key_id`.
 In other words, the presence of a KMS in the global settings dictates which variant must be used.
-For `SignData` the key material is the private (signing) key; for `VerifyData` it is the public (verification) key.
+For `SignCertificate` and `SignData` the key material is the private (signing) key; for `VerifyData` it is the public (verification) key.
 
 | Variable | Type | Description |
 | --- | --- | --- |
@@ -352,6 +353,56 @@ An ordered list of [`KeySource`](#keysource-message) entries used for `hybrid` s
 | Variable | Type | Description |
 | --- | --- | --- |
 | `component_keys` | List of Maps | An ordered list of [`KeySource`](#keysource-message) entries (traditional key, then post-quantum key). Used for `hybrid` signing mode. |
+
+### Key encoding
+
+The server does not decode PEM key material.
+Key material in a `raw_key` is always transmitted in binary form, with the encoding determined by the API:
+
+| API | Key material | Encoding of `raw_key` |
+| --- | --- | --- |
+| `EncryptData`, `DecryptData` | Symmetric key | Raw key bytes (e.g. 16 bytes for AES-128, 32 bytes for AES-256). |
+| `SignCertificate` | Private key of the issuer (CA) | DER-encoded PKCS #8 `OneAsymmetricKey` ([RFC 5958](https://www.rfc-editor.org/rfc/rfc5958)). |
+| `SignData` | Private (signing) key | DER-encoded PKCS #8 `OneAsymmetricKey` ([RFC 5958](https://www.rfc-editor.org/rfc/rfc5958)). |
+| `VerifyData` | Public (verification) key | DER-encoded `SubjectPublicKeyInfo` ([RFC 5280](https://www.rfc-editor.org/rfc/rfc5280#section-4.1.2.7)). |
+
+`OneAsymmetricKey` supersedes `PrivateKeyInfo` from [RFC 5208](https://www.rfc-editor.org/rfc/rfc5208); a `v1` `OneAsymmetricKey` is identical to a `PrivateKeyInfo`, so keys in either form are accepted.
+`SubjectPublicKeyInfo` takes its name from the X.509 certificate field holding the subject's public key and is the standard encoding for public keys outside of certificates as well.
+Both structures carry an algorithm identifier, so the server determines the key type from the key itself rather than from a PEM label.
+The same encoding is used for all key types:
+
+- Traditional keys (RSA, ECDSA, EdDSA) use their standard algorithm identifiers.
+- ML-DSA keys use the algorithm identifiers defined in [RFC 9881](https://www.rfc-editor.org/rfc/rfc9881). Private keys must use the seed-only form; the expanded-key form and the combined seed-and-expanded-key form are not supported. Some tools write the combined form by default; with OpenSSL a seed-only key can be produced via `-provparam ml-dsa.output_formats=seed-only`.
+- SLH-DSA keys use the algorithm identifiers defined in [RFC 9909](https://www.rfc-editor.org/rfc/rfc9909).
+- In `hybrid` mode, each component key is supplied as a separate `KeySource` and encoded on its own.
+
+The `csr` and `ca_cert` fields of `SignCertificate` are not affected and remain PEM-encoded strings.
+
+#### Key handling in the client libraries
+
+Applications typically hold their keys in PEM format.
+The client libraries therefore accept a `raw_key` for `SignCertificate`, `SignData` and `VerifyData` either PEM- or DER-encoded and prepare it as follows before sending the request:
+
+- A PEM-encoded key is decoded into its DER content.
+- Private keys in the PKCS #1 (`RSA PRIVATE KEY`) or SEC 1 (`EC PRIVATE KEY`) format are converted to PKCS #8.
+- ML-DSA private keys are not converted; they must already be supplied in the seed-only form.
+- The resulting DER, as well as DER supplied directly by the application, must pass the [structure check](#structure-check).
+- Input that cannot be decoded or fails the structure check is rejected with an error before the request is sent.
+
+##### Structure check
+
+The client libraries only check the ASN.1 DER structure of a `raw_key`.
+They do not load the key with a cryptographic library, so the check does not depend on which algorithms the platform supports; validating the key material itself remains the responsibility of the server.
+A `raw_key` passes the check if:
+
+- It consists of exactly one DER element without trailing bytes.
+- A private key is a PKCS #8 `OneAsymmetricKey`: a `SEQUENCE` containing an `INTEGER` version (`v1` = 0 or `v2` = 1), an `AlgorithmIdentifier` (a `SEQUENCE` starting with an `OBJECT IDENTIFIER`) and an `OCTET STRING` holding the private key, optionally followed by attributes (`[0]`) and, for `v2`, the public key (`[1]`).
+- A public key is a `SubjectPublicKeyInfo`: a `SEQUENCE` containing an `AlgorithmIdentifier` and a `BIT STRING` holding the public key.
+- For an ML-DSA private key (algorithm identifier `id-ml-dsa-44`, `id-ml-dsa-65` or `id-ml-dsa-87`), the `OCTET STRING` holds only the 32-byte seed, encoded as `[0] IMPLICIT OCTET STRING`. The expanded-key form and the combined seed-and-expanded-key form are rejected.
+
+DER-encoded keys in the PKCS #1 or SEC 1 format fail this check and are rejected; the libraries only convert these formats when they are supplied as PEM, where the PEM label identifies the format.
+
+Where the language allows it, intermediate buffers holding private key material should be zeroized once the request has been built.
 
 ### `EncryptMetadata` message
 
@@ -423,6 +474,7 @@ This may be caused by different circumstances.
 On the client side, errors may be caused in the following scenarios:
 
 - The profile is malformed, incomplete, contains erroneous values (e.g. unsupported algorithms) or could not be parsed. It should adhere to the profile structure specification.
+- SignCertificate / SignData / VerifyData: a supplied `raw_key` is neither valid PEM nor DER, uses an unsupported PEM label, or fails the [structure check](#structure-check) (e.g. an ML-DSA private key that is not in the seed-only form).
 - SignCertificate:
     - The signature algorithm in the profile does not match the algorithm of the private key given as a parameter.
     - The public key given in the CA certificate does not match the private key.

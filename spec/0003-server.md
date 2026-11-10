@@ -71,7 +71,7 @@ Every production cryptographic request is processed through the following stages
 
 1. **Receive** — the request is received over the gRPC connection. Message size limits are enforced before further processing (see [Input Validation and Constraints](#input-validation-and-constraints)).
 1. **Resolve profile** — the profile named in the request is retrieved from the set of profiles loaded at startup. An unknown profile name results in an error.
-1. **Validate input** — the request payload is validated against the rules of the resolved profile. This includes parsing cryptographic material (CSR, CA certificate, private key) and checking it against profile constraints.
+1. **Validate input** — the request payload is validated against the rules of the resolved profile. This includes parsing cryptographic material (CSR, CA certificate, keys) and checking it against profile constraints.
 1. **Execute** — the approved operation is delegated to the cryptographic backend, which executes the requested cryptographic operation using the algorithm and parameters defined by the profile.
 1. **Respond** — the result is packaged into the corresponding response message together with request metadata and returned to the client.
 Record-producing operations additionally return a self-describing descriptor (profile, operation and the concrete algorithm used) so the caller can persist it alongside the value (see [Self-describing responses](#self-describing-responses)).
@@ -123,7 +123,8 @@ Depending on the requested operation, the server validates that:
 - The requested profile exists and is valid.
 - The requested algorithm is supported and permitted by the profile.
 - For `SignCertificate`:
-    - The CSR, CA certificate and CA private key are well-formed and can be parsed.
+    - The PEM-encoded CSR and CA certificate are well-formed and can be parsed.
+    - A supplied CA private key is a well-formed DER-encoded PKCS #8 private key.
     - The CA public key matches the CA private key.
     - The signature algorithm in the profile is compatible with the provided key.
     - The subject's public key and the issuer's private key satisfy the key-size constraints defined in the profile.
@@ -131,6 +132,7 @@ Depending on the requested operation, the server validates that:
 - For `SignData` and `VerifyData`:
     - The supplied key source matches the profile's signing mode: a single key for `legacy` and `post-quantum` modes, or component keys (traditional key plus ML-DSA key) for `hybrid` mode.
     - The supplied key source matches the general settings for the KSM: raw key material for caller-managed profiles (no key storage backend), or a key identifier that the broker resolves and retrieves from the KMS for profiles with a key storage backend.
+    - Supplied raw keys are well-formed: a DER-encoded PKCS #8 private key for `SignData` and a DER-encoded `SubjectPublicKeyInfo` public key for `VerifyData`.
     - The signing algorithm in the profile is compatible with the supplied or referenced key(s), and the key(s) satisfy the key-size constraints defined in the profile.
     - For `VerifyData`, the signature is well-formed and can be parsed in the supplied signature format.
 - For `EncryptData` and `DecryptData`:
@@ -140,6 +142,8 @@ Depending on the requested operation, the server validates that:
     - For `DecryptData`, the ciphertext and authentication tag are verified against the decryption parameters supplied by the caller.
 
 Requests that violate any of these rules are rejected with a verbose error identifying the failed check.
+
+The server does not decode PEM-encoded keys; converting keys supplied by the application into the expected DER encoding is the responsibility of the client libraries (see [Key encoding](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0002-library.md#key-encoding)).
 
 ---
 
