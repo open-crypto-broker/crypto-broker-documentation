@@ -11,9 +11,11 @@ The Crypto Broker server provides remote cryptographic operations over gRPC, inc
 
 This specification describes the observable behavior and processing contract of the Crypto Broker server: the services it exposes, how it processes and validates requests, the security guarantees it provides, and how it can be operated and observed.
 
-It is intentionally implementation-agnostic. It does not describe the internal package layout, data structures or function signatures of any particular implementation, so that it remains valid as the implementation evolves. The reference implementation is written in `Go`; implementation-specific details are documented in the [Crypto Broker Server repository](https://github.com/open-crypto-broker/crypto-broker-server).
+It is intentionally implementation-agnostic. It does not describe the internal package layout, data structures or function signatures of any particular implementation, so that it remains valid as the implementation evolves.
+The reference implementation is written in `Go`; implementation-specific details are documented in the [Crypto Broker Server repository](https://github.com/open-crypto-broker/crypto-broker-server).
 
-The server does not expose cryptographic functionality directly. Instead, it validates every request against a predefined profile and delegates approved operations to an underlying cryptographic backend.
+The server does not expose cryptographic functionality directly.
+Instead, it validates every request against a predefined profile and delegates approved operations to an underlying cryptographic backend.
 
 ---
 
@@ -33,9 +35,10 @@ Error reporting is verbose: in case of failure, the client is informed which sta
 
 ## Exposed gRPC Services
 
-The server exposes the gRPC services defined in the shared Protobuf definitions. The message formats for every request and response are specified in the [Crypto Broker Library Specification](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0002-library.md) and are not repeated here.
+The server exposes the gRPC services defined in the shared Protobuf definitions.
+The message formats for every request and response are specified in the [Crypto Broker Library Specification](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0002-library.md) and are not repeated here.
 
-### Production service (`CryptoGrpc`)
+### Production service (`CryptoService`)
 
 The production service is always available and exposes the cryptographic operations used by client applications:
 
@@ -46,14 +49,15 @@ The production service is always available and exposes the cryptographic operati
 - `EncryptData` — encrypts arbitrary input using the authenticated symmetric encryption algorithm defined in the selected profile.
 - `DecryptData` — decrypts data previously produced by `EncryptData` using the selected profile.
 
-### Development service (`CryptoGrpcDev`)
+### Development service (`CryptoDevService`)
 
 The development/diagnostics service exposes endpoints that are **not** intended for production application use:
 
 - `Benchmark` — runs a dedicated benchmark inside the server.
 - `FakeEndpoint` — a minimal endpoint used for testing and connectivity checks.
 
-This service is only registered when the server is started in a development environment (see [Configuration](#configuration)). In production deployments it is disabled and not reachable.
+This service is only registered when the server is started in a development environment (see [Configuration](#configuration)).
+In production deployments it is disabled and not reachable.
 
 ### Health checking
 
@@ -67,7 +71,7 @@ Every production cryptographic request is processed through the following stages
 
 1. **Receive** — the request is received over the gRPC connection. Message size limits are enforced before further processing (see [Input Validation and Constraints](#input-validation-and-constraints)).
 1. **Resolve profile** — the profile named in the request is retrieved from the set of profiles loaded at startup. An unknown profile name results in an error.
-1. **Validate input** — the request payload is validated against the rules of the resolved profile. This includes parsing cryptographic material (CSR, CA certificate, private key) and checking it against profile constraints.
+1. **Validate input** — the request payload is validated against the rules of the resolved profile. This includes parsing cryptographic material (CSR, CA certificate, keys) and checking it against profile constraints.
 1. **Execute** — the approved operation is delegated to the cryptographic backend, which executes the requested cryptographic operation using the algorithm and parameters defined by the profile.
 1. **Respond** — the result is packaged into the corresponding response message together with request metadata and returned to the client.
 Record-producing operations additionally return a self-describing descriptor (profile, operation and the concrete algorithm used) so the caller can persist it alongside the value (see [Self-describing responses](#self-describing-responses)).
@@ -119,7 +123,8 @@ Depending on the requested operation, the server validates that:
 - The requested profile exists and is valid.
 - The requested algorithm is supported and permitted by the profile.
 - For `SignCertificate`:
-    - The CSR, CA certificate and CA private key are well-formed and can be parsed.
+    - The PEM-encoded CSR and CA certificate are well-formed and can be parsed.
+    - A supplied CA private key is a well-formed DER-encoded PKCS #8 private key.
     - The CA public key matches the CA private key.
     - The signature algorithm in the profile is compatible with the provided key.
     - The subject's public key and the issuer's private key satisfy the key-size constraints defined in the profile.
@@ -127,6 +132,7 @@ Depending on the requested operation, the server validates that:
 - For `SignData` and `VerifyData`:
     - The supplied key source matches the profile's signing mode: a single key for `legacy` and `post-quantum` modes, or component keys (traditional key plus ML-DSA key) for `hybrid` mode.
     - The supplied key source matches the general settings for the KSM: raw key material for caller-managed profiles (no key storage backend), or a key identifier that the broker resolves and retrieves from the KMS for profiles with a key storage backend.
+    - Supplied raw keys are well-formed: a DER-encoded PKCS #8 private key for `SignData` and a DER-encoded `SubjectPublicKeyInfo` public key for `VerifyData`.
     - The signing algorithm in the profile is compatible with the supplied or referenced key(s), and the key(s) satisfy the key-size constraints defined in the profile.
     - For `VerifyData`, the signature is well-formed and can be parsed in the supplied signature format.
 - For `EncryptData` and `DecryptData`:
@@ -137,11 +143,14 @@ Depending on the requested operation, the server validates that:
 
 Requests that violate any of these rules are rejected with a verbose error identifying the failed check.
 
+The server does not decode PEM-encoded keys; converting keys supplied by the application into the expected DER encoding is the responsibility of the client libraries (see [Key encoding](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0002-library.md#key-encoding)).
+
 ---
 
 ## Supported Algorithms
 
-The following algorithms are supported by the server. A given request may only use an algorithm if the selected profile permits it.
+The following algorithms are supported by the server.
+A given request may only use an algorithm if the selected profile permits it.
 
 ### Hashing (`HashData`)
 
@@ -179,9 +188,9 @@ The server is designed to enforce cryptographic policy and to minimize exposure:
 - **Access control** — the Unix domain socket is created with owner-only permissions (`0600`), so only the user running the server may connect.
 - **Policy enforcement** — no cryptographic operation is performed unless it is explicitly permitted by a profile. Algorithms, key sizes and certificate validity are constrained by the profile.
 - **Resource limits** — request and response message sizes and the number of concurrent streams are bounded to reduce the impact of abusive or malformed traffic.
-- **Reduced production surface** — the development service (`CryptoGrpcDev`) is only registered in development environments and is disabled in production.
+- **Reduced production surface** — the development service (`CryptoDevService`) is only registered in development environments and is disabled in production.
 - **Sensitive material handling** — sensitive key material is zeroized in memory once it is no longer needed.
-- **No silent downgrade** — a deprecated profile's `replacedBy` pointer is a downgrade vector and must only reference an equal-or-stronger profile, under change-management and audit controls.
+- **No silent downgrade** — a deprecated profile's `replaced_by` pointer is a downgrade vector and must only reference an equal-or-stronger profile, under change-management and audit controls.
 
 ### FIPS 140 mode
 
@@ -190,7 +199,8 @@ The reference implementation can be built and run in a FIPS 140 mode, in which c
 - **Build time** — selection of the FIPS-validated cryptographic module linked into the binary.
 - **Runtime** — whether the FIPS module is merely enabled or strictly enforced.
 
-The server reports its FIPS mode status on startup so operators can confirm the deployed configuration. Detailed guidance on enabling and enforcing FIPS 140 is provided in the server repository's [FIPS documentation](https://github.com/open-crypto-broker/crypto-broker-server/blob/main/docs/fips.md).
+The server reports its FIPS mode status on startup so operators can confirm the deployed configuration.
+Detailed guidance on enabling and enforcing FIPS 140 is provided in the server repository's [FIPS documentation](https://github.com/open-crypto-broker/crypto-broker-server/blob/main/docs/fips.md).
 
 ---
 
@@ -202,21 +212,25 @@ The server is instrumented for distributed tracing and metrics using [OpenTeleme
 - **Metrics** — operational and system metrics are collected and can be exported to an OTLP-compatible backend.
 - **Cross-cutting request handling** — trace-context propagation, correlation-ID handling, structured request logging and panic recovery are applied uniformly to incoming requests.
 
-Exporters, sampling and related behavior are configurable. See the server repository's [observability documentation](https://github.com/open-crypto-broker/crypto-broker-server/blob/main/docs/otel.md) for details.
+Exporters, sampling and related behavior are configurable.
+See the server repository's [observability documentation](https://github.com/open-crypto-broker/crypto-broker-server/blob/main/docs/otel.md) for details.
 
 ---
 
 ## Configuration
 
-The server is configured entirely through environment variables. These control, among other things, the environment mode (production vs. development), the profiles directory, logging behavior, observability exporters, and resource limits.
+The server is configured entirely through environment variables.
+These control, among other things, the environment mode (production vs. development), the profiles directory, logging behavior, observability exporters, and resource limits.
 
-The full and authoritative list of environment variables is maintained alongside the implementation in the server repository's [environment variable documentation](https://github.com/open-crypto-broker/crypto-broker-server/blob/main/docs/envs.md). It is intentionally not duplicated here to avoid drift.
+The full and authoritative list of environment variables is maintained alongside the implementation in the server repository's [environment variable documentation](https://github.com/open-crypto-broker/crypto-broker-server/blob/main/docs/envs.md).
+It is intentionally not duplicated here to avoid drift.
 
 ---
 
 ## Error Handling
 
-Error reporting is verbose and stage-aware: the client is told which part of the operation failed. Errors are returned when, for example:
+Error reporting is verbose and stage-aware: the client is told which part of the operation failed.
+Errors are returned when, for example:
 
 - the specified profile is missing or invalid;
 - input data is malformed (e.g. an invalid CSR, certificate or key);
@@ -251,10 +265,10 @@ Error reporting is verbose and stage-aware: the client is told which part of the
 
 ## Running the Crypto Broker server
 
-To run the Crypto Broker server, build an executable binary of the server (for example via `task build-go`, which places the binary in the `bin` directory) and start it, providing the directory that contains the profiles:
+To run the Crypto Broker server, build an executable binary of the server and start it, providing the directory that contains the profiles:
 
 ```bash
-CRYPTO_BROKER_PROFILES_DIR=/full/path/to/profiles/ ./bin/cryptobroker-server
+CRYPTO_BROKER_PROFILES_DIR=/full/path/to/profiles/ ./bin/crypto-broker-server
 ```
 
 For detailed instructions on building, configuring and running the server, refer to the [Crypto Broker Server repository](https://github.com/open-crypto-broker/crypto-broker-server).
