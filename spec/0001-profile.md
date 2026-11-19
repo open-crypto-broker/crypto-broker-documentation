@@ -83,7 +83,37 @@ Configures how data should be hashed.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `HashAlg` | String | The hash algorithm to use (e.g., `SHA-512`, `SHA3-512`). |
+| `HashAlg` | String | The hash algorithm to use (e.g., `SHA-512`, `SHA3-256`, `SHAKE128`). |
+| `MinOutputBytes` | Int | *(Optional, SHAKE only)* Smallest output size in bytes a request may ask for. Also used when a request does not specify an output size. Defaults to the security floor of the algorithm (see below). |
+| `MaxOutputBytes` | Int | *(Optional, SHAKE only)* Largest output size in bytes a request may ask for. Defaults to `MinOutputBytes`. |
+
+SHAKE128 and SHAKE256 are extendable-output functions (XOFs): the length of the hash value is not fixed by the algorithm but chosen by the caller via the optional `output_bytes` field of the `HashData` request.
+The profile bounds which output sizes are allowed; if a request does not specify an output size, `MinOutputBytes` is used.
+If a profile only sets `HashAlg`, the output size is fixed to the security floor of the algorithm.
+The output size actually used is reported in bits as part of the algorithm in the response descriptor, e.g. `shake-128/256` for a 32-byte SHAKE128 output.
+
+Output sizes below the security floor are never permitted, neither in the profile nor in a request.
+A request whose `output_bytes` is below the profile's `MinOutputBytes` (and therefore possibly below the security floor) or above its `MaxOutputBytes` is rejected with an error; the server does not adjust the size or fall back to a warning.
+
+The following constraints must hold, otherwise the profile is rejected at load time:
+
+- `MinOutputBytes` is at least the security floor of the algorithm, so that every allowed output provides the full collision resistance of the XOF ([FIPS 202](https://doi.org/10.6028/NIST.FIPS.202) Appendix A.1):
+    - SHAKE128: at least `32` bytes (128-bit collision security).
+    - SHAKE256: at least `64` bytes (256-bit collision security).
+- `MinOutputBytes` ≤ `MaxOutputBytes`.
+- `MaxOutputBytes` does not exceed the server-wide limit of `1024` bytes.
+- `MinOutputBytes` and `MaxOutputBytes` must not be set for algorithms with a fixed output size (SHA-2, SHA-3).
+
+Example:
+
+```yaml
+- Name: Hash-SHAKE256
+  API:
+    HashData:
+      HashAlg: shake-256
+      MinOutputBytes: 64
+      MaxOutputBytes: 128
+```
 
 ### API: `EncryptData` and `DecryptData`
 

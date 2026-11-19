@@ -102,6 +102,7 @@ It is recommended that the successor referenced by `replacedBy` should point to 
 ### Self-describing responses
 
 Record-producing operations (`HashData`, `SignCertificate`, `SignData`, `EncryptData`) return a self-describing descriptor alongside the result, capturing the profile, the operation and the concrete algorithm actually used.
+For extendable-output functions (SHAKE128, SHAKE256), the algorithm additionally encodes the output length actually used in bits (e.g. `shake-256/512` for a 64-byte output, analogous to `sha-512/256`), so that a stored hash value can be recomputed and compared later.
 Applications are expected to persist this descriptor with the stored artifact so that records remain verifiable and migratable across later profile changes.
 Editing the algorithms of an existing profile in place is a supported but breaking action: applications that compare freshly computed values against previously stored ones can silently break, so such changes should instead be performed as a rolling migration via a new profile and deprecation metadata.
 
@@ -122,6 +123,11 @@ Depending on the requested operation, the server validates that:
 
 - The requested profile exists and is valid.
 - The requested algorithm is supported and permitted by the profile.
+- For `HashData`:
+    - A requested output size is only accepted for extendable-output functions (SHAKE128, SHAKE256); requests that specify an output size for a hash algorithm with a fixed output size are rejected.
+    - The requested output size must be within the `MinOutputBytes` and `MaxOutputBytes` bounds of the profile. If no output size is requested, the profile's `MinOutputBytes` is used.
+    - Requests with an output size below the security floor of the algorithm (32 bytes for SHAKE128, 64 bytes for SHAKE256) can never pass this check and are rejected with an error; the server neither adjusts the size nor merely emits a warning.
+    - The bounds are checked before any output is allocated. At load time the server ensures that the profile bounds are not below the security floor of the algorithm and do not exceed the server-wide limit of 1024 bytes.
 - For `SignCertificate`:
     - The PEM-encoded CSR and CA certificate are well-formed and can be parsed.
     - A supplied CA private key is a well-formed DER-encoded PKCS #8 private key.
@@ -157,7 +163,7 @@ A given request may only use an algorithm if the selected profile permits it.
 - SHA-256, SHA-384, SHA-512
 - SHA-512/256
 - SHA3-256, SHA3-384, SHA3-512
-- SHAKE128, SHAKE256 (extendable-output functions with a fixed output size)
+- SHAKE128, SHAKE256 (extendable-output functions; the output size is chosen per request within the bounds of the profile, see the [Profile Specification](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0001-profile.md#api-hashdata))
 
 ### Certificate signing (`SignCertificate`)
 

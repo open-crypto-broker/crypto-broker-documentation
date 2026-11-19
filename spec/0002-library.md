@@ -66,6 +66,7 @@ The `HashData` API function allows clients to compute cryptographic hashes over 
 | `profile` | String | Name of the profile (e.g., `Default`, `PCI-DSS`). |
 | `input` | Bytes | Arbitrary input to be hashed. |
 | `output_format` | Enum | *(Optional)* Output encoding of the hash value: `HEX` (default) or `RAW`. |
+| `output_bytes` | Uint32 | *(Optional)* Length of the hash value in bytes. Only allowed for profiles that use an extendable-output function (SHAKE128, SHAKE256), and must be within the `MinOutputBytes`/`MaxOutputBytes` bounds of the profile (see [Profile Specification](0001-profile.md#api-hashdata)). Values below the security floor (32 bytes for SHAKE128, 64 bytes for SHAKE256) are always rejected with an error. If omitted, the profile's `MinOutputBytes` is used. |
 | `metadata` | Map | *(Optional)* Metadata about the Crypto Broker request/response. |
 
 ##### `HashData` Output
@@ -293,7 +294,7 @@ See the [Profile Change and Migration Guidance ADR](../adr/overall/0013-profile-
 | --- | --- | --- |
 | `profile` | String | Name of the profile that produced the artifact. |
 | `operation` | String | The API that produced the artifact (e.g. `HashData`, `SignCertificate`, `SignData`, `EncryptData`). |
-| `algorithm` | String | The concrete algorithm actually used (e.g. `sha3-512`, `ML-DSA-65`, `aes-128-gcm`). |
+| `algorithm` | String | The concrete algorithm actually used (e.g. `sha3-512`, `ML-DSA-65`, `aes-128-gcm`). For extendable-output functions the output length in bits is appended (e.g. `shake-128/256` for a 32-byte output, `shake-256/512` for a 64-byte output). |
 
 ### `DeprecationWarning` message
 
