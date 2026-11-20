@@ -381,7 +381,7 @@ The `csr` and `ca_cert` fields of `SignCertificate` are not affected and remain 
 
 These are the only accepted key formats.
 Neither the client libraries nor the server convert keys from other formats, such as PKCS #1 (`RSA PRIVATE KEY`, `RSA PUBLIC KEY`), SEC 1 (`EC PRIVATE KEY`) or encrypted PKCS #8 (`ENCRYPTED PRIVATE KEY`), and a certificate is not accepted in place of a public key.
-Applications holding keys in another format have to convert them once beforehand (see [Converting existing keys](#converting-existing-keys)).
+Applications holding keys in another format have to convert them once beforehand.
 The rationale is described in [ADR 0018](../adr/overall/0018-no-key-format-conversion.md).
 The server validates the key material (see [Raw key validation](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0003-server.md#raw-key-validation)).
 
