@@ -110,7 +110,7 @@ Editing the algorithms of an existing profile in place is a supported but breaki
 
 ## Input Validation and Constraints
 
-The server validates requests at two levels before any cryptographic operation is performed.
+The server validates requests at several levels before any cryptographic operation is performed.
 
 ### Transport-level limits
 
@@ -130,7 +130,7 @@ Depending on the requested operation, the server validates that:
     - The bounds are checked before any output is allocated. At load time the server ensures that the profile bounds are not below the security floor of the algorithm and do not exceed the server-wide limit of 1024 bytes.
 - For `SignCertificate`:
     - The PEM-encoded CSR and CA certificate are well-formed and can be parsed.
-    - A supplied CA private key is a well-formed DER-encoded PKCS #8 private key.
+    - A supplied CA private key is a DER-encoded PKCS #8 private key (see [Raw key validation](#raw-key-validation)).
     - The CA public key matches the CA private key.
     - The signature algorithm in the profile is compatible with the provided key.
     - The subject's public key and the issuer's private key satisfy the key-size constraints defined in the profile.
@@ -138,7 +138,7 @@ Depending on the requested operation, the server validates that:
 - For `SignData` and `VerifyData`:
     - The supplied key source matches the profile's signing mode: a single key for `legacy` and `post-quantum` modes, or component keys (traditional key plus ML-DSA key) for `hybrid` mode.
     - The supplied key source matches the general settings for the KSM: raw key material for caller-managed profiles (no key storage backend), or a key identifier that the broker resolves and retrieves from the KMS for profiles with a key storage backend.
-    - Supplied raw keys are well-formed: a DER-encoded PKCS #8 private key for `SignData` and a DER-encoded `SubjectPublicKeyInfo` public key for `VerifyData`.
+    - Supplied raw keys are a DER-encoded PKCS #8 private key for `SignData` and a DER-encoded `SubjectPublicKeyInfo` public key for `VerifyData` (see [Raw key validation](#raw-key-validation)).
     - The signing algorithm in the profile is compatible with the supplied or referenced key(s), and the key(s) satisfy the key-size constraints defined in the profile.
     - For `VerifyData`, the signature is well-formed and can be parsed in the supplied signature format.
 - For `EncryptData` and `DecryptData`:
@@ -149,7 +149,21 @@ Depending on the requested operation, the server validates that:
 
 Requests that violate any of these rules are rejected with a verbose error identifying the failed check.
 
-The server does not decode PEM-encoded keys; converting keys supplied by the application into the expected DER encoding is the responsibility of the client libraries (see [Key encoding](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0002-library.md#key-encoding)).
+### Raw key validation
+
+The server is the only component that parses the content of a caller-supplied asymmetric `raw_key`; the client libraries only decode PEM (see [Key encoding](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0002-library.md#key-encoding)).
+It neither converts keys between formats nor guesses the format; the rationale is described in [ADR 0018](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/adr/overall/0018-no-key-format-conversion.md).
+Before any cryptographic operation, the server validates that:
+
+- The `raw_key` is parsed with exactly one parser, selected by the API and not by the input: PKCS #8 for private keys (`SignCertificate`, `SignData`) and `SubjectPublicKeyInfo` for public keys (`VerifyData`).
+- The `raw_key` consists of exactly one DER element without trailing bytes. PEM-encoded input is not decoded but rejected, as is BER (e.g. indefinite lengths).
+- A private key is an unencrypted PKCS #8 `OneAsymmetricKey` in version `v1` or `v2`. PKCS #1, SEC 1 and `EncryptedPrivateKeyInfo` are rejected.
+- A public key is a `SubjectPublicKeyInfo`. PKCS #1 public keys and certificates are rejected.
+- The algorithm identifier of the key matches the algorithm of the profile.
+- An ML-DSA private key uses the seed-only form of [RFC 9881](https://www.rfc-editor.org/rfc/rfc9881). The expanded-key form and the combined seed-and-expanded-key form are rejected explicitly, even if the crypto library could load them.
+
+A rejected key results in an error that names the expected format.
+Buffers holding decoded private key material are zeroized after use.
 
 ---
 

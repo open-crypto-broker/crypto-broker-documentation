@@ -14,7 +14,7 @@ The Crypto Broker service provides remote cryptographic operations over gRPC, in
 This specification describes the behavior and message formats of the API endpoints for clients across any programming language.
 The library does not perform cryptographic operations locally.
 It delegates all such tasks to the Crypto Broker Server.
-The library only prepares the request payload, e.g. by converting PEM-encoded keys supplied by the application into the DER encoding expected by the server (see [Key encoding](#key-encoding)).
+The library only prepares the request payload, e.g. by decoding PEM-encoded keys supplied by the application into the DER encoding expected by the server (see [Key encoding](#key-encoding)).
 
 ---
 
@@ -379,29 +379,21 @@ The same encoding is used for all key types:
 
 The `csr` and `ca_cert` fields of `SignCertificate` are not affected and remain PEM-encoded strings.
 
+These are the only accepted key formats.
+Neither the client libraries nor the server convert keys from other formats, such as PKCS #1 (`RSA PRIVATE KEY`, `RSA PUBLIC KEY`), SEC 1 (`EC PRIVATE KEY`) or encrypted PKCS #8 (`ENCRYPTED PRIVATE KEY`), and a certificate is not accepted in place of a public key.
+Applications holding keys in another format have to convert them once beforehand.
+The rationale is described in [ADR 0018](../adr/overall/0018-no-key-format-conversion.md).
+The server validates the key material (see [Raw key validation](https://github.com/open-crypto-broker/crypto-broker-documentation/blob/main/spec/0003-server.md#raw-key-validation)).
+
 #### Key handling in the client libraries
 
 Applications typically hold their keys in PEM format.
 The client libraries therefore accept a `raw_key` for `SignCertificate`, `SignData` and `VerifyData` either PEM- or DER-encoded and prepare it as follows before sending the request:
 
-- A PEM-encoded key is decoded into its DER content.
-- Private keys in the PKCS #1 (`RSA PRIVATE KEY`) or SEC 1 (`EC PRIVATE KEY`) format are converted to PKCS #8.
-- ML-DSA private keys are not converted; they must already be supplied in the seed-only form.
-- The resulting DER, as well as DER supplied directly by the application, must pass the [structure check](#structure-check).
-- Input that cannot be decoded or fails the structure check is rejected with an error before the request is sent.
-
-##### Structure check
-
-The client libraries only check the ASN.1 DER structure of a `raw_key`.
-They do not load the key with a cryptographic library, so the check does not depend on which algorithms the platform supports; validating the key material itself remains the responsibility of the server.
-A `raw_key` passes the check if:
-
-- It consists of exactly one DER element without trailing bytes.
-- A private key is a PKCS #8 `OneAsymmetricKey`: a `SEQUENCE` containing an `INTEGER` version (`v1` = 0 or `v2` = 1), an `AlgorithmIdentifier` (a `SEQUENCE` starting with an `OBJECT IDENTIFIER`) and an `OCTET STRING` holding the private key, optionally followed by attributes (`[0]`) and, for `v2`, the public key (`[1]`).
-- A public key is a `SubjectPublicKeyInfo`: a `SEQUENCE` containing an `AlgorithmIdentifier` and a `BIT STRING` holding the public key.
-- For an ML-DSA private key (algorithm identifier `id-ml-dsa-44`, `id-ml-dsa-65` or `id-ml-dsa-87`), the `OCTET STRING` holds only the 32-byte seed, encoded as `[0] IMPLICIT OCTET STRING`. The expanded-key form and the combined seed-and-expanded-key form are rejected.
-
-DER-encoded keys in the PKCS #1 or SEC 1 format fail this check and are rejected; the libraries only convert these formats when they are supplied as PEM, where the PEM label identifies the format.
+- Input whose first non-whitespace characters are `-----BEGIN` is treated as PEM ([RFC 7468](https://www.rfc-editor.org/rfc/rfc7468)) and decoded into its DER content. All other input is treated as DER.
+- A PEM input must consist of exactly one PEM block without headers, surrounded only by whitespace. The label must be `PRIVATE KEY` for `SignCertificate` and `SignData` and `PUBLIC KEY` for `VerifyData`.
+- DER, whether decoded from PEM or supplied directly by the application, is sent unchanged. The client libraries do not inspect, convert or validate the DER content.
+- PEM input that cannot be decoded, contains more than one block or headers, or uses another label is rejected with an error before the request is sent. For a known non-PKCS #8 label, the error should name the expected format and tell the application that the key must be converted to PKCS #8.
 
 Where the language allows it, intermediate buffers holding private key material should be zeroized once the request has been built.
 
@@ -475,7 +467,9 @@ This may be caused by different circumstances.
 On the client side, errors may be caused in the following scenarios:
 
 - The profile is malformed, incomplete, contains erroneous values (e.g. unsupported algorithms) or could not be parsed. It should adhere to the profile structure specification.
-- SignCertificate / SignData / VerifyData: a supplied `raw_key` is neither valid PEM nor DER, uses an unsupported PEM label, or fails the [structure check](#structure-check) (e.g. an ML-DSA private key that is not in the seed-only form).
+- SignCertificate / SignData / VerifyData:
+    - Client side: a supplied PEM-encoded `raw_key` cannot be decoded, contains more than one block or headers, or uses a label other than `PRIVATE KEY` (private keys) or `PUBLIC KEY` (public keys), e.g. `RSA PRIVATE KEY` or `EC PRIVATE KEY` (see [Key handling in the client libraries](#key-handling-in-the-client-libraries)).
+    - Server side: a supplied `raw_key` is not a single DER-encoded, unencrypted PKCS #8 `OneAsymmetricKey` (private keys) or `SubjectPublicKeyInfo` (public keys), e.g. a DER-encoded PKCS #1 or SEC 1 key, DER with trailing bytes, or an ML-DSA private key that is not in the seed-only form.
 - SignCertificate:
     - The signature algorithm in the profile does not match the algorithm of the private key given as a parameter.
     - The public key given in the CA certificate does not match the private key.
